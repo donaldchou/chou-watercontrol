@@ -1,6 +1,6 @@
-import Link from "next/link";
+import { AccountCard } from "@/components/AccountCard";
 import { Button, Card, CardTitle, PageHeader, Switch } from "@/components/ui";
-import { IconBlueprint, IconChevron, IconLine, IconUpload } from "@/components/icons";
+import { IconLine, IconUpload } from "@/components/icons";
 import { controller } from "@/lib/mock";
 
 function NumField({ id, label, value, unit, hint }: { id: string; label: string; value: string; unit: string; hint?: string }) {
@@ -29,19 +29,6 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-col gap-5">
       <PageHeader title="設定" />
-
-      <Link href="/design" className="lg:hidden">
-        <Card className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-soft text-brand">
-            <IconBlueprint />
-          </span>
-          <div className="flex-1">
-            <div className="font-bold">設計圖</div>
-            <div className="text-sm text-muted">系統架構、3D 示意、電箱設計</div>
-          </div>
-          <IconChevron className="text-muted" />
-        </Card>
-      </Link>
 
       <div className="grid gap-5 lg:grid-cols-2">
         <Card>
@@ -105,31 +92,7 @@ export default function SettingsPage() {
           </div>
         </Card>
 
-        <Card className="lg:col-span-2">
-          <CardTitle>帳號</CardTitle>
-          <ul className="flex flex-col divide-y divide-line text-sm">
-            <li className="flex items-center justify-between py-2.5">
-              <span>
-                <span className="font-medium">管理員</span>
-                <span className="ml-2 text-muted">可以操作所有功能</span>
-              </span>
-              <span className="text-muted">1 人</span>
-            </li>
-            <li className="flex items-center justify-between py-2.5">
-              <span>
-                <span className="font-medium">檢視者</span>
-                <span className="ml-2 text-muted">只能看數據，不能開關設備</span>
-              </span>
-              <span className="text-muted">2 人</span>
-            </li>
-          </ul>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button variant="secondary">新增帳號</Button>
-            <Link href="/login" className="inline-flex items-center rounded-xl px-4 py-2.5 text-sm font-bold text-crit hover:bg-crit-soft">
-              登出
-            </Link>
-          </div>
-        </Card>
+        <AccountCard />
       </div>
     </div>
   );

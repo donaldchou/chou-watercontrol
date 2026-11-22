@@ -97,7 +97,7 @@ export function btnClass(variant: Variant = "primary", className = "") {
     danger: "bg-crit text-white hover:opacity-90",
     ghost: "text-brand hover:bg-brand-soft",
   };
-  return `inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${v[variant]} ${className}`;
+  return `inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${v[variant]} ${className}`;
 }
 
 export function Button({ children, variant = "primary", className = "" }: { children: ReactNode; variant?: Variant; className?: string }) {

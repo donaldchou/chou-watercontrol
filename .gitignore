@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ll3 ASP 設定檔（含金鑰）
+/ll3/platform/chou-watercontrol/config.asp
+# 本機產生的資料庫檔
+/data-export/

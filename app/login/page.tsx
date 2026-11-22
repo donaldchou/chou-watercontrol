@@ -1,9 +1,45 @@
-import Link from "next/link";
+"use client";
+
+import { useState } from "react";
 import { IconLeaf } from "@/components/icons";
 
 const field = "w-full rounded-xl border border-line bg-surface px-3 py-3 text-base outline-none focus:border-brand";
 
+/** 登入後要回到的頁面；只接受站內路徑，避免被導到別的網站 */
+function nextPath() {
+  const next = new URLSearchParams(window.location.search).get("next") ?? "/";
+  return next.startsWith("/") && !next.startsWith("//") ? next : "/";
+}
+
 export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? `登入失敗（HTTP ${res.status}）`);
+      }
+      // 整頁重新載入，讓登入身分重新讀取
+      window.location.href = nextPath();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setPassword("");
+      setBusy(false);
+    }
+  }
+
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
@@ -17,24 +53,21 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <form className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6">
+        <form onSubmit={submit} className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6">
           <label className="flex flex-col gap-1 text-sm font-medium">
-            帳號
-            <input id="account" autoComplete="username" className={field} placeholder="輸入帳號" />
+            Email
+            <input id="email" type="email" autoComplete="username" autoFocus required className={field} value={email} onChange={(e) => setEmail(e.target.value)} />
           </label>
           <label className="flex flex-col gap-1 text-sm font-medium">
             密碼
-            <input id="password" type="password" autoComplete="current-password" className={field} placeholder="輸入密碼" />
+            <input id="password" type="password" autoComplete="current-password" required className={field} value={password} onChange={(e) => setPassword(e.target.value)} />
           </label>
-          <label className="flex items-center gap-2 text-sm text-muted">
-            <input id="remember" type="checkbox" defaultChecked className="h-4 w-4 accent-[var(--brand)]" />
-            這台手機保持登入 30 天
-          </label>
-          <Link href="/" className="rounded-xl bg-brand py-3 text-center font-bold text-white hover:opacity-90">
-            登入
-          </Link>
+          {error && <p className="rounded-xl bg-crit-soft px-3 py-2 text-sm text-crit">{error}</p>}
+          <button type="submit" disabled={busy} className="rounded-xl bg-brand py-3 font-bold text-white hover:opacity-90 disabled:opacity-60">
+            {busy ? "登入中…" : "登入"}
+          </button>
         </form>
-        <p className="mt-4 text-center text-xs text-muted">UI 樣稿：按登入直接進入總覽</p>
+        <p className="mt-4 text-center text-xs text-muted">登入後 7 天內不用再登入。沒有帳號請找管理者建立。</p>
       </div>
     </main>
   );
