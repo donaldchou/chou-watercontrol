@@ -4,10 +4,10 @@ import { useState } from "react";
 
 const field = "w-full rounded-xl border border-line bg-surface px-3 py-3 text-base outline-none focus:border-brand";
 
-/** 登入後要回到的頁面；只接受站內路徑，避免被導到別的網站 */
+/** 登入後要回到的頁面（預設「所有案場」）；只接受站內路徑，避免被導到別的網站 */
 function nextPath() {
-  const next = new URLSearchParams(window.location.search).get("next") ?? "/";
-  return next.startsWith("/") && !next.startsWith("//") ? next : "/";
+  const next = new URLSearchParams(window.location.search).get("next") ?? "/sites";
+  return next.startsWith("/") && !next.startsWith("//") ? next : "/sites";
 }
 
 export default function LoginPage() {

@@ -53,29 +53,32 @@ export default function SitesPage() {
         <Stat label="連線中" value={online} tone="text-good" />
         <Stat label="離線" value={sites.length - online} tone={sites.length - online ? "text-crit" : ""} />
         <Stat label="灌溉中" value={sites.filter((s) => s.status === "irrigating").length} tone="text-water" />
-        <Stat label="需要注意" value={needAttention} tone={needAttention ? "text-warn" : ""} />
+        <Stat label="待處理" value={needAttention} tone={needAttention ? "text-warn" : ""} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="flex flex-col gap-4">
         {list.map((s) => {
           const st = STATUS[s.status];
           const pct = s.progress ? Math.round((s.progress.elapsedMin / s.progress.totalMin) * 100) : 0;
           return (
             <Card key={s.id} className={`flex flex-col gap-4 ${s.online ? "" : "border-crit/40"}`}>
-              <div className="flex items-start gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-lg font-bold">{s.name}</h2>
                     {s.example && <span className="rounded border border-line px-1.5 text-xs text-muted">示意</span>}
+                    <Pill tone={st.tone}>{st.label}</Pill>
                   </div>
                   <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted">
                     <IconSignal bars={s.signalBars} />
                     最後回報 {s.lastReport}
                   </div>
                 </div>
-                <Pill tone={st.tone}>{st.label}</Pill>
+                <SiteEnter id={s.id} example={s.example} />
               </div>
 
+              {/* 一行一個案場：寬螢幕時分成三欄（目前動作｜數值｜告警與下次排程），手機上下排 */}
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1.2fr)] lg:items-start">
               <div className={`rounded-xl px-3 py-2.5 ${s.status === "irrigating" ? "bg-water-soft" : "bg-surface-2"}`}>
                 {s.progress ? (
                   <div className="flex flex-col gap-2">
@@ -96,32 +99,36 @@ export default function SitesPage() {
                 )}
               </div>
 
-              <div className="grid grid-cols-4 gap-2 text-sm">
+              <div className="grid grid-cols-4 gap-x-2 gap-y-3 text-sm lg:grid-cols-2">
                 <Metric label="水壓" value={s.pressure === null ? "—" : `${s.pressure} kg`} warn={s.pressure !== null && s.pressure > 0 && s.pressure < 1.2} />
                 <Metric label="蓄水桶" value={`${s.waterTankPct}%`} warn={s.waterTankPct < 35} />
                 <Metric label="肥料桶" value={`${s.fertTankPct}%`} warn={s.fertTankPct < 45} />
                 <Metric label="今日用水" value={`${s.todayWaterM3} 噸`} />
               </div>
 
-              {s.alerts.length > 0 && (
-                <ul className="flex flex-col gap-1.5 border-t border-line pt-3">
-                  {s.alerts.map((a) => (
-                    <li key={a.text} className="flex items-center gap-2 text-sm">
-                      <LevelTag level={a.level} />
-                      <span className="min-w-0">{a.text}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              <div className="mt-auto flex flex-wrap items-center gap-3 border-t border-line pt-3">
-                <span className="inline-flex min-w-0 items-center gap-1.5 text-xs text-muted">
-                  <IconClock width={14} height={14} />
+              <div className="flex flex-col gap-2.5 border-t border-line pt-3 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-4">
+                {s.alerts.length > 0 ? (
+                  <ul className="flex flex-col gap-1.5">
+                    {s.alerts.map((a) => (
+                      <li key={a.text} className="flex items-start gap-2 text-sm">
+                        <span className="shrink-0">
+                          <LevelTag level={a.level} />
+                        </span>
+                        <span className="min-w-0">{a.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm">
+                    <LevelTag level="good" />
+                    <span className="text-muted">沒有告警</span>
+                  </div>
+                )}
+                <span className="inline-flex min-w-0 items-start gap-1.5 text-xs text-muted">
+                  <IconClock width={14} height={14} className="mt-0.5 shrink-0" />
                   下次：{s.next}
                 </span>
-                <span className="ml-auto">
-                  <SiteEnter id={s.id} example={s.example} />
-                </span>
+              </div>
               </div>
             </Card>
           );

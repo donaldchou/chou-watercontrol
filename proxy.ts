@@ -13,13 +13,15 @@ export async function proxy(req: NextRequest) {
   const session = await verifySession(req.cookies.get(SESSION_COOKIE)?.value);
 
   if (PUBLIC.includes(pathname)) {
-    if (session && pathname === '/login') return NextResponse.redirect(new URL('/', req.url));
+    // 已登入又打開登入頁：直接到首頁「所有案場」
+    if (session && pathname === '/login') return NextResponse.redirect(new URL('/sites', req.url));
     return NextResponse.next();
   }
 
   if (!session) {
     if (pathname.startsWith('/api/')) return NextResponse.json({ error: '請先登入' }, { status: 401 });
     const login = new URL('/login', req.url);
+    // 直接開網站（/）登入後到「所有案場」；開其他頁面登入後回到原頁
     if (pathname !== '/') login.searchParams.set('next', pathname + search);
     const res = NextResponse.redirect(login);
     if (req.cookies.has(SESSION_COOKIE)) res.cookies.delete(SESSION_COOKIE);
@@ -28,7 +30,7 @@ export async function proxy(req: NextRequest) {
 
   if (session.role !== 'admin') {
     if (pathname.startsWith('/api/admin/')) return NextResponse.json({ error: '只有管理者可以使用後台' }, { status: 403 });
-    if (pathname === '/admin' || pathname.startsWith('/admin/')) return NextResponse.redirect(new URL('/', req.url));
+    if (pathname === '/admin' || pathname.startsWith('/admin/')) return NextResponse.redirect(new URL('/sites', req.url));
   }
   return NextResponse.next();
 }
