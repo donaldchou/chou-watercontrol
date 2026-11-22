@@ -1,0 +1,434 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<title>周家果園自動水肥系統</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: 單欄說明文件；架構圖寬版可橫捲，下接流程與預算表 */
+:root{
+  --bg:#F2F5F1; --surface:#FFFFFF; --ink:#1B2A21; --muted:#5D6D63; --line:#CBD7CE;
+  --water:#2675B3; --fert:#B97C12; --ctrl:#C9532A; --net:#2E8656; --power:#B23A3A;
+  --water-soft:#E3EEF7; --fert-soft:#F6EEDD; --ctrl-soft:#F8E8E1; --net-soft:#E2F1E8;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111915; --surface:#1A241E; --ink:#E3ECE6; --muted:#93A499; --line:#2F3E35;
+  --water:#5BA7DF; --fert:#E0A83F; --ctrl:#EE7A4E; --net:#5DC48C; --power:#E26666;
+  --water-soft:#18293A; --fert-soft:#30271A; --ctrl-soft:#33221B; --net-soft:#18301F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111915; --surface:#1A241E; --ink:#E3ECE6; --muted:#93A499; --line:#2F3E35;
+  --water:#5BA7DF; --fert:#E0A83F; --ctrl:#EE7A4E; --net:#5DC48C; --power:#E26666;
+  --water-soft:#18293A; --fert-soft:#30271A; --ctrl-soft:#33221B; --net-soft:#18301F; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.7}
+.wrap{max-width:1120px;margin:0 auto;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:40px}
+header{display:flex;flex-direction:column;gap:8px}
+.eyebrow{font-size:12.5px;letter-spacing:.12em;color:var(--net);font-weight:700}
+h1{font-size:clamp(26px,4vw,36px);font-weight:900;line-height:1.25;margin:0;text-wrap:balance}
+h2{font-size:21px;font-weight:700;margin:0 0 14px;text-wrap:balance}
+.lede{color:var(--muted);max-width:68ch;margin:0}
+.facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.chip{font-size:13px;padding:3px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--muted)}
+.chip b{color:var(--ink);font-weight:500}
+
+.diagram{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 18px 10px}
+.scroll{overflow-x:auto}
+.scroll svg{display:block;min-width:960px;width:100%;height:auto}
+.hint{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+@media (min-width:1000px){.hint{display:none}}
+.legend{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:13px;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.legend i{display:inline-block;width:28px;height:0;border-top:4px solid}
+
+svg .box{fill:var(--surface);stroke-width:1.6}
+svg .t{font-family:var(--sans);font-size:14.5px;font-weight:700;fill:var(--ink)}
+svg .s{font-family:var(--sans);font-size:11.5px;fill:var(--muted)}
+svg .lbl{font-family:var(--sans);font-size:12px;font-weight:500}
+svg .sec{font-family:var(--sans);font-size:11.5px;letter-spacing:.14em;font-weight:700;fill:var(--muted)}
+svg .zone{fill:var(--net-soft);stroke:var(--net);stroke-width:1.4}
+svg .tree{fill:var(--net)}
+svg .band{fill:var(--bg)}
+
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;counter-reset:s}
+.steps li{counter-increment:s;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.steps li::before{content:counter(s);font-family:var(--mono);font-weight:700;font-size:13px;color:var(--water)}
+.steps b{font-weight:700}
+.steps span{color:var(--muted);font-size:14px}
+
+.budget{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
+@media (max-width:820px){.budget{grid-template-columns:1fr}}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:14px}
+th,td{padding:9px 16px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+thead th{font-size:12.5px;color:var(--muted);font-weight:500;letter-spacing:.06em}
+tr.grp td{background:var(--bg);font-weight:700;font-size:13.5px;padding-top:12px}
+tr.grp td.n{color:var(--muted);font-weight:500}
+td small{display:block;color:var(--muted);font-size:12.5px}
+tbody tr:last-child td{border-bottom:0}
+.item{display:flex;gap:12px;align-items:flex-start}
+.thumbs{display:flex;gap:6px;flex:none}
+.ph{width:72px;height:72px;padding:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--bg);cursor:zoom-in;flex:none}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph:hover{border-color:var(--water)}
+.ph:focus-visible{outline:2px solid var(--water);outline-offset:2px}
+.it{min-width:0}
+.ph-none{width:72px;height:72px;flex:none;border:1px dashed var(--line);border-radius:8px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;line-height:1.3;color:var(--muted)}
+tr.new td:first-child{box-shadow:inset 3px 0 0 var(--water)}
+.lk{display:flex;gap:14px;font-size:12.5px;margin-top:3px}
+.lk a{color:var(--water);text-decoration:none}
+.lk a:hover{text-decoration:underline}
+.photo-note{font-size:13px;color:var(--muted);margin:0 0 10px}
+.lb{position:fixed;inset:0;z-index:50;background:rgba(10,16,12,.72);display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.lb-card{background:var(--surface);border-radius:14px;padding:16px;max-width:440px;width:100%;display:flex;flex-direction:column;gap:10px}
+.lb-card img{width:100%;max-height:60vh;object-fit:contain;border-radius:8px;background:var(--bg)}
+.lb-meta{display:flex;flex-direction:column;gap:2px;font-size:13.5px;color:var(--muted)}
+.lb-meta b{color:var(--ink);font-size:15.5px}
+.lb-meta a{color:var(--water)}
+.lb-x{align-self:flex-end;font:inherit;font-size:14px;padding:6px 16px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+
+.total{background:var(--surface);border:2px solid var(--net);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
+.total .k{font-size:13px;color:var(--muted)}
+.total .big{font-family:var(--mono);font-size:38px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.total .big small{font-family:var(--sans);font-size:15px;font-weight:500;color:var(--muted);margin-right:4px}
+.total .range{font-size:14px;color:var(--muted)}
+.total hr{border:0;border-top:1px solid var(--line);margin:0}
+.total ul{margin:0;padding-left:18px;font-size:13.5px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.total ul b{color:var(--ink);font-weight:500}
+
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.note{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.note h3{font-size:15px;margin:0 0 4px}
+.note p{margin:0;color:var(--muted);font-size:14px}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">拉拉山・上巴陵 水蜜桃園</div>
+  <h1>周家果園自動水肥系統</h1>
+  <p class="lede">山泉水先存進蓄水桶，由加壓馬達送進果園。注肥泵把液肥或液態氮肥打進主管，過濾後依坡度分 4 區輪流滴灌到根部。現場控制箱透過中華電信 4G 回報數據，你用手機就能看數據、開關閥門、設定排程。</p>
+  <div class="facts">
+    <span class="chip"><b>200</b> 棵水蜜桃</span>
+    <span class="chip"><b>6～7</b> 分地・坡地</span>
+    <span class="chip">根部滴灌</span>
+    <span class="chip">市電（待申請）</span>
+    <span class="chip">4G 中華電信</span>
+  </div>
+</header>
+
+<section>
+  <h2>系統架構圖</h2>
+  <div class="diagram">
+    <div class="scroll">
+<svg viewBox="0 0 1250 730" role="img" aria-label="自動水肥系統架構圖：雲端、控制箱、水路與 4 個分區">
+  <defs>
+    <marker id="aw" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--water)"/></marker>
+    <marker id="af" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--fert)"/></marker>
+  </defs>
+
+  <!-- section labels -->
+  <text class="sec" x="20" y="22">雲端與手機</text>
+  <text class="sec" x="20" y="195">現場控制</text>
+  <text class="sec" x="20" y="410">水路與施肥</text>
+  <text class="sec" x="960" y="372">果園分區（坡地）</text>
+
+  <!-- network -->
+  <path d="M220 75H400" stroke="var(--net)" stroke-width="2.5" stroke-dasharray="7 5" fill="none"/>
+  <path d="M800 75H980" stroke="var(--net)" stroke-width="2.5" stroke-dasharray="7 5" fill="none"/>
+  <path d="M600 200V120" stroke="var(--net)" stroke-width="2.5" stroke-dasharray="7 5" fill="none"/>
+  <text class="lbl" x="612" y="166" fill="var(--net)">4G 中華電信・每 60 秒回報</text>
+
+  <!-- power -->
+  <path d="M200 250H430" stroke="var(--power)" stroke-width="3" fill="none"/>
+  <text class="lbl" x="232" y="242" fill="var(--power)">110V／220V</text>
+
+  <!-- control bus + drops -->
+  <g stroke="var(--ctrl)" stroke-width="2" stroke-dasharray="5 4" fill="none">
+    <path d="M600 300V375"/>
+    <path d="M172 375H1232V660"/>
+    <path d="M172 375V415"/>
+    <path d="M282 375V438"/>
+    <path d="M337 375V580"/>
+    <path d="M512 375V615H492"/>
+    <path d="M682 375V438"/>
+    <path d="M785 375V438"/>
+    <path d="M905 375V660"/>
+    <path d="M1232 420H1220M1232 500H1220M1232 580H1220M1232 660H1220"/>
+  </g>
+  <text class="lbl" x="612" y="342" fill="var(--ctrl)">控制／感測線</text>
+
+  <!-- water main -->
+  <g stroke="var(--water)" stroke-width="5" fill="none" stroke-linecap="round">
+    <path d="M104 470H126" marker-end="url(#aw)"/>
+    <path d="M214 470H236" marker-end="url(#aw)"/>
+    <path d="M324 470H346" marker-end="url(#aw)"/>
+    <path d="M410 470H526" marker-end="url(#aw)"/>
+    <path d="M614 470H636" marker-end="url(#aw)"/>
+    <path d="M724 470H746" marker-end="url(#aw)"/>
+    <path d="M820 470H850"/>
+    <path d="M850 420V660"/>
+    <path d="M850 420H870M850 500H870M850 580H870M850 660H870"/>
+    <path d="M940 420H956M940 500H956M940 580H956M940 660H956" marker-end="url(#aw)"/>
+  </g>
+
+  <!-- fertilizer -->
+  <g stroke="var(--fert)" stroke-width="4" fill="none" stroke-linecap="round">
+    <path d="M380 615H404" marker-end="url(#af)"/>
+    <path d="M450 590V480" marker-end="url(#af)"/>
+  </g>
+  <circle cx="450" cy="470" r="8" fill="var(--fert)"/>
+  <text class="lbl" x="460" y="508" fill="var(--fert)">注肥點</text>
+  <text class="lbl" x="460" y="560" fill="var(--fert)">液肥／氮肥</text>
+
+  <!-- cloud row -->
+  <rect class="box" x="40" y="45" width="180" height="60" rx="10" stroke="var(--net)"/>
+  <text class="t" x="130" y="71" text-anchor="middle">手機／電腦</text>
+  <text class="s" x="130" y="91" text-anchor="middle">看數據・開關・排程</text>
+
+  <rect x="400" y="30" width="400" height="90" rx="12" fill="var(--net-soft)" stroke="var(--net)" stroke-width="1.6"/>
+  <text class="t" x="600" y="64" text-anchor="middle">雲端：Next.js 網站 + MongoDB</text>
+  <text class="s" x="600" y="86" text-anchor="middle">chou-watercontrol・Vercel 與 Atlas 免費方案</text>
+  <text class="s" x="600" y="104" text-anchor="middle">存感測數據、排程、操作紀錄</text>
+
+  <rect class="box" x="980" y="45" width="200" height="60" rx="10" stroke="var(--net)"/>
+  <text class="t" x="1080" y="71" text-anchor="middle">LINE 告警</text>
+  <text class="s" x="1080" y="91" text-anchor="middle">缺水・漏水・肥料快空</text>
+
+  <!-- control row -->
+  <rect class="box" x="40" y="215" width="160" height="70" rx="10" stroke="var(--power)"/>
+  <text class="t" x="120" y="245" text-anchor="middle">台電市電</text>
+  <text class="s" x="120" y="266" text-anchor="middle">待申請</text>
+
+  <rect x="430" y="200" width="340" height="100" rx="12" fill="var(--ctrl-soft)" stroke="var(--ctrl)" stroke-width="1.8"/>
+  <text class="t" x="600" y="230" text-anchor="middle">現場防水控制箱</text>
+  <text class="s" x="600" y="252" text-anchor="middle">ESP32＋4G 模組＋8 路繼電器＋12V 電源</text>
+  <text class="s" x="600" y="270" text-anchor="middle">馬達電磁開關・漏電斷路器</text>
+  <text class="s" x="600" y="288" text-anchor="middle">斷網時照本機排程繼續跑</text>
+
+  <!-- water row -->
+  <rect class="box" x="20" y="438" width="84" height="64" rx="10" stroke="var(--water)"/>
+  <text class="t" x="62" y="465" text-anchor="middle">山泉水</text>
+  <text class="s" x="62" y="485" text-anchor="middle">取水濾網</text>
+
+  <rect x="130" y="415" width="84" height="110" rx="10" fill="var(--water-soft)" stroke="var(--water)" stroke-width="1.6"/>
+  <text class="t" x="172" y="455" text-anchor="middle">蓄水桶</text>
+  <text class="s" x="172" y="475" text-anchor="middle">2 噸</text>
+  <text class="s" x="172" y="493" text-anchor="middle">水位開關</text>
+  <text class="s" x="172" y="510" text-anchor="middle">缺水停馬達</text>
+
+  <rect class="box" x="240" y="438" width="84" height="64" rx="10" stroke="var(--water)"/>
+  <text class="t" x="282" y="465" text-anchor="middle">加壓馬達</text>
+  <text class="s" x="282" y="485" text-anchor="middle">1/2 HP</text>
+
+  <rect class="box" x="350" y="445" width="60" height="50" rx="10" stroke="var(--water)"/>
+  <text class="t" x="380" y="469" text-anchor="middle">逆止閥</text>
+  <text class="s" x="380" y="486" text-anchor="middle">防倒流</text>
+
+  <rect class="box" x="530" y="438" width="84" height="64" rx="10" stroke="var(--water)"/>
+  <text class="t" x="572" y="465" text-anchor="middle">過濾器</text>
+  <text class="s" x="572" y="485" text-anchor="middle">疊片 120 目</text>
+
+  <rect class="box" x="640" y="438" width="84" height="64" rx="10" stroke="var(--water)"/>
+  <text class="t" x="682" y="465" text-anchor="middle">流量計</text>
+  <text class="s" x="682" y="485" text-anchor="middle">算水量・肥量</text>
+
+  <rect class="box" x="750" y="438" width="70" height="64" rx="10" stroke="var(--water)"/>
+  <text class="t" x="785" y="465" text-anchor="middle">壓力計</text>
+  <text class="s" x="785" y="485" text-anchor="middle">抓漏水</text>
+
+  <!-- fertilizer subsystem -->
+  <rect x="290" y="580" width="90" height="80" rx="10" fill="var(--fert-soft)" stroke="var(--fert)" stroke-width="1.6"/>
+  <text class="t" x="335" y="610" text-anchor="middle">肥料桶</text>
+  <text class="s" x="335" y="630" text-anchor="middle">500L</text>
+  <text class="s" x="335" y="647" text-anchor="middle">液位感測</text>
+
+  <rect class="box" x="408" y="590" width="84" height="54" rx="10" stroke="var(--fert)"/>
+  <text class="t" x="450" y="614" text-anchor="middle">注肥泵</text>
+  <text class="s" x="450" y="632" text-anchor="middle">12V 隔膜</text>
+
+  <!-- valves -->
+  <g>
+    <rect class="box" x="870" y="400" width="70" height="40" rx="8" stroke="var(--ctrl)"/>
+    <rect class="box" x="870" y="480" width="70" height="40" rx="8" stroke="var(--ctrl)"/>
+    <rect class="box" x="870" y="560" width="70" height="40" rx="8" stroke="var(--ctrl)"/>
+    <rect class="box" x="870" y="640" width="70" height="40" rx="8" stroke="var(--ctrl)"/>
+    <text class="t" x="905" y="425" text-anchor="middle">A 閥</text>
+    <text class="t" x="905" y="505" text-anchor="middle">B 閥</text>
+    <text class="t" x="905" y="585" text-anchor="middle">C 閥</text>
+    <text class="t" x="905" y="665" text-anchor="middle">D 閥</text>
+  </g>
+  <text class="s" x="905" y="700" text-anchor="middle">12V 電動球閥</text>
+
+  <!-- zones -->
+  <g>
+    <rect class="zone" x="960" y="394" width="260" height="52" rx="10"/>
+    <rect class="zone" x="960" y="474" width="260" height="52" rx="10"/>
+    <rect class="zone" x="960" y="554" width="260" height="52" rx="10"/>
+    <rect class="zone" x="960" y="634" width="260" height="52" rx="10"/>
+    <text class="t" x="976" y="416">A 區・最上坡</text><text class="s" x="976" y="435">50 棵・土壤濕度 1 支</text>
+    <text class="t" x="976" y="496">B 區・中上坡</text><text class="s" x="976" y="515">50 棵・土壤濕度 1 支</text>
+    <text class="t" x="976" y="576">C 區・中下坡</text><text class="s" x="976" y="595">50 棵・土壤濕度 1 支</text>
+    <text class="t" x="976" y="656">D 區・最下坡</text><text class="s" x="976" y="675">50 棵・土壤濕度 1 支</text>
+  </g>
+  <g class="tree">
+    <circle cx="1140" cy="420" r="7"/><circle cx="1160" cy="420" r="7"/><circle cx="1180" cy="420" r="7"/><circle cx="1200" cy="420" r="7"/>
+    <circle cx="1140" cy="500" r="7"/><circle cx="1160" cy="500" r="7"/><circle cx="1180" cy="500" r="7"/><circle cx="1200" cy="500" r="7"/>
+    <circle cx="1140" cy="580" r="7"/><circle cx="1160" cy="580" r="7"/><circle cx="1180" cy="580" r="7"/><circle cx="1200" cy="580" r="7"/>
+    <circle cx="1140" cy="660" r="7"/><circle cx="1160" cy="660" r="7"/><circle cx="1180" cy="660" r="7"/><circle cx="1200" cy="660" r="7"/>
+  </g>
+  <text class="s" x="1090" y="712" text-anchor="middle">壓力補償滴頭，每棵 4 顆，高處低處出水一樣</text>
+</svg>
+    </div>
+    <p class="hint">手機上可以左右滑動看完整的圖。</p>
+    <div class="legend">
+      <span><i style="border-color:var(--water)"></i>水路</span>
+      <span><i style="border-color:var(--fert)"></i>肥液</span>
+      <span><i style="border-color:var(--ctrl);border-top-style:dashed;border-top-width:3px"></i>控制／感測線</span>
+      <span><i style="border-color:var(--net);border-top-style:dashed;border-top-width:3px"></i>網路</span>
+      <span><i style="border-color:var(--power)"></i>電力</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>一次施肥灌溉怎麼跑</h2>
+  <ol class="steps">
+    <li><b>排程時間到</b><span>控制箱打開總閥和 A 閥，啟動加壓馬達。土壤夠濕就自動跳過。</span></li>
+    <li><b>確認有水</b><span>流量計和壓力計確認水有在流，沒水或壓力異常就停機並發 LINE 告警。</span></li>
+    <li><b>注肥</b><span>注肥泵開始打肥，系統依流量計算已注入的肥量，到設定量就停泵。</span></li>
+    <li><b>清水沖管</b><span>再跑幾分鐘清水，把管路和滴頭裡的肥液沖乾淨，避免結晶堵塞。</span></li>
+    <li><b>換下一區</b><span>關 A 閥、開 B 閥，依序跑完 4 區。每一步的用水量和肥量都上傳到網站。</span></li>
+  </ol>
+</section>
+
+<section>
+  <h2>採購清單與預算</h2>
+  <p class="photo-note">照片是同類設備的示意圖，取自 Wikimedia Commons，實際買到的型號外觀會不一樣。點照片可以放大。「更多照片」開 Google 圖片，「蝦皮」直接搜尋商品。</p>
+  <div class="budget">
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>品項</th><th class="n">數量</th><th class="n">估價 NT$</th></tr></thead>
+        <tbody>
+          <tr class="grp"><td>水源</td><td></td><td class="n">13,500</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="intake" data-file="Hdpe_Pipes_In_Coil.jpg" data-t="成捲的 PE 管"><img src="img/intake.jpg" alt="成捲的 PE 管"></button></div><div class="it">取水口濾網＋引水 PE 管 1"<small>從山泉到蓄水桶，距離未定，先抓 200 m</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=PE管+1吋+捲" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=PE管%201吋" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">1 式</td><td class="n">6,000</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="tank" data-file="Blue_plastic_water_tank_1.jpg" data-t="PE 塑膠水塔"><img src="img/tank.jpg" alt="藍色塑膠水塔"></button></div><div class="it">PE 蓄水桶 2 噸<small>山泉水量不穩時當緩衝</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=PE+水塔+2噸" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=PE水塔%202噸" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">1</td><td class="n">7,000</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="float" data-file="Float_switch_for_open_tanks.JPG" data-t="水位浮球開關"><img src="img/float.jpg" alt="紅色浮球開關"></button></div><div class="it">水位浮球開關<small>桶內沒水就停馬達，防止空轉燒壞</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=水塔+浮球開關" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=浮球開關%20水塔" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">1</td><td class="n">500</td></tr>
+
+          <tr class="grp"><td>加壓與首部</td><td></td><td class="n">30,600</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="pump" data-file="Water_pump_2.jpg" data-t="離心式抽水馬達"><img src="img/pump.jpg" alt="離心式抽水馬達"></button></div><div class="it">加壓馬達 1/2 HP 不鏽鋼<small>單相 220V；每區約 800 L/h，1/2 HP 就夠</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=不鏽鋼+加壓馬達+1/2HP" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=不鏽鋼%20加壓馬達%201/2HP" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">1</td><td class="n">9,000</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="filter" data-file="20220209_154845_GU_DSC09763_k.jpg" data-t="疊片式濾芯（大型設備，同原理）"><img src="img/filter.jpg" alt="疊片式濾芯"></button></div><div class="it">疊片過濾器 1.5" 120 目<small>照片是大型設備的疊片濾芯，你買的是單顆管路型</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=疊片過濾器+1.5吋+灌溉" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=疊片過濾器%201.5吋" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">1</td><td class="n">3,000</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="check" data-file="Check_Valve.jpg" data-t="銅製逆止閥"><img src="img/check.jpg" alt="銅製逆止閥"></button></div><div class="it">逆止閥<small>主管一顆、注肥管一顆</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=逆止閥+1.5吋" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=逆止閥%201.5吋" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">2</td><td class="n">1,200</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="flow" data-file="Itron_Water_Meter.jpg" data-t="水錶（脈衝輸出型外觀相同）"><img src="img/flow.jpg" alt="水錶"></button></div><div class="it">脈衝式流量計 1.5"<small>外觀跟一般水錶一樣，多一條訊號線</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=脈衝輸出+水錶+流量計" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=脈衝%20流量計%20水錶" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">1</td><td class="n">2,500</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="press" data-file="Датчик_давления.JPG" data-t="壓力感測器（工業型）"><img src="img/press.jpg" alt="壓力感測器"></button></div><div class="it">水壓感測器<small>買小型螺牙式就好，照片是工業款</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=水壓感測器+0.5-4.5V" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=壓力感測器%200.5-4.5V" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">1</td><td class="n">800</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="ballvalve" data-file="Automated_ball_valve.jpg" data-t="電動球閥"><img src="img/ballvalve.jpg" alt="電動球閥"></button></div><div class="it">12V 電動球閥 1"<small>總閥 1 顆選「2 線・斷電自動關」電容式（約 2,500），停電時擋住水塔重力下流；A～D 區 4 顆選「3 線・常電型」（各約 1,500）</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=12V+電動球閥+1吋" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=12V%20電動球閥%201吋" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">5</td><td class="n">8,500</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="airvalve" data-file="Automatic_bleeding_valve.jpg" data-t="自動排氣閥"><img src="img/airvalve.jpg" alt="自動排氣閥"></button></div><div class="it">排氣閥、末端沖洗閥<small>坡地高點排氣，管尾定期沖砂</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=灌溉+排氣閥" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=灌溉%20排氣閥" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">6</td><td class="n">2,000</td></tr>
+          <tr class="new"><td><div class="item"><div class="ph-none">無示意照</div><div class="it">減壓閥 1"<small>裝在下方分區的電動閥後面，把高低差造成的高壓降到滴頭能用的範圍。數量先估 3 顆，等高度差確認後再調整</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=減壓閥+1吋+灌溉" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=減壓閥%201吋" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">3</td><td class="n">3,600</td></tr>
+
+          <tr class="grp"><td>施肥</td><td></td><td class="n">7,000</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="ferttank" data-file="Intermediate_Bulk_Container_(fcm).jpg" data-t="塑膠儲桶（照片為 1000L 款）"><img src="img/ferttank.jpg" alt="附鐵架的塑膠儲桶"></button></div><div class="it">肥料桶 500L<small>採收季裝液肥，其他時間裝液態氮肥</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=500L+塑膠桶+儲水桶" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=500L%20塑膠桶" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">1</td><td class="n">3,000</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="level" data-file="Float_switch_off.jpg" data-t="浮球式液位開關（內部構造）"><img src="img/level.jpg" alt="浮球式液位開關內部"></button></div><div class="it">肥料桶液位感測<small>桶快空時發 LINE 告警</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=液位開關+浮球" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=液位開關%20浮球" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">1</td><td class="n">500</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="diaphragm" data-file="Diaphragm_micropump,miniature_pump,air_sampling_pumps.jpg" data-t="小型隔膜泵"><img src="img/diaphragm.jpg" alt="各種小型隔膜泵"></button></div><div class="it">12V 隔膜注肥泵<small>選耐酸鹼、出口壓力 5 kg 以上的款式</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=12V+隔膜泵+耐酸鹼" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=12V%20隔膜泵" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">1</td><td class="n">3,500</td></tr>
+
+          <tr class="grp"><td>控制與網路</td><td></td><td class="n">16,100</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="esp32" data-file="ESP32_Dev_Board.jpg" data-t="ESP32 開發板"><img src="img/esp32.jpg" alt="ESP32 開發板"></button><button class="ph" type="button" data-img="relay" data-file="SRD-05VDC-SL-C_5V_one-channel_relay_module.jpg" data-t="繼電器模組（照片為 1 路，要買 8 路）"><img src="img/relay.jpg" alt="繼電器模組"></button></div><div class="it">ESP32＋4G 模組＋8 路繼電器＋天線<small>4G 模組選 A7670 系列，支援中華電信</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=ESP32+A7670+4G" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=ESP32%20A7670" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">1 組</td><td class="n">2,500</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="box" data-file="Fuse_box_on_hager_components.JPG" data-t="電箱內的斷路器"><img src="img/box.jpg" alt="電箱內的斷路器"></button></div><div class="it">防水電箱、12V 電源、漏電斷路器、馬達電磁開關<small>照電箱設計圖：IP65 電箱＋防雷、積熱電驛、分路斷路器、門板急停與手動／自動開關、端子台、接地。<a href="/design/control-box" target="_top">看電箱設計圖</a></small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=戶外+防水配電箱+IP65" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=防水配電箱%20IP65" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">1 式</td><td class="n">7,600</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="soil" data-file="Soil_moisture_sensor.JPG" data-t="插地式土壤濕度計"><img src="img/soil.jpg" alt="插在土裡的濕度計"></button></div><div class="it">土壤濕度感測器 RS485<small>每區 1 支；照片是指針款，要買能接線的 RS485 款</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=RS485+土壤濕度感測器" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=RS485%20土壤濕度" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">4</td><td class="n">6,000</td></tr>
+
+          <tr class="grp"><td>果園管路（200 棵）</td><td></td><td class="n">31,200</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="pipe" data-file="Polyethylene_Pipe_lengths.jpg" data-t="PE 管"><img src="img/pipe.jpg" alt="一排 PE 管"></button></div><div class="it">主管／分區管 PE 1"～1.5"<span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=PE管+1.5吋+灌溉" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=PE管%201.5吋" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">300 m</td><td class="n">10,000</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="dripline" data-file="Drip_irrigation_system.JPG" data-t="果園滴灌管"><img src="img/dripline.jpg" alt="果園裡架在樹下的滴灌管"></button></div><div class="it">滴灌支管 16 mm<span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=16mm+滴灌管" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=16mm%20滴灌管" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">1,300 m</td><td class="n">9,000</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="emitter" data-file="Drip_emitter.jpg" data-t="插針式滴頭"><img src="img/emitter.jpg" alt="插針式滴頭"></button></div><div class="it">止漏型壓力補償滴頭<small>每棵 4 顆；止漏型關水後不會從低處一直滴，架高和坡地都需要</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=壓力補償+滴頭" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=壓力補償%20滴頭" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">800</td><td class="n">7,200</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="fittings" data-file="Raccords_PVC.jpg" data-t="塑膠管接頭"><img src="img/fittings.jpg" alt="各種塑膠管接頭"></button></div><div class="it">接頭、三通、管塞、打孔器、固定樁<span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=PE管+接頭+三通" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=PE管%20接頭%20三通" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">1 式</td><td class="n">5,000</td></tr>
+
+          <tr class="grp"><td>滴灌管架高吊線（離地約 50 cm，割草機從下面過）</td><td></td><td class="n">26,000</td></tr>
+          <tr class="new"><td><div class="item"><div class="ph-none">無示意照</div><div class="it">鍍鋅鐵線 #12（約 2.6 mm）<small>沿每排樹拉一條，綁在樹幹上當中間支撐</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=鍍鋅鐵線+12號" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=鍍鋅鐵線%2012號" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">1,400 m</td><td class="n">4,500</td></tr>
+          <tr class="new"><td><div class="item"><div class="ph-none">無示意照</div><div class="it">端柱：鍍鋅管 3/4"、1.5 m<small>每排頭尾各 1 支，打入土裡約 60 cm</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=鍍鋅管+3/4吋+果園+支柱" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=鍍鋅管%20支柱" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">40</td><td class="n">9,000</td></tr>
+          <tr class="new"><td><div class="item"><div class="ph-none">無示意照</div><div class="it">中間補柱<small>樹距超過 5 m 或沒有樹的地方補一支</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=果園+鐵線+支柱" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=園藝%20支柱%20鍍鋅" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">30</td><td class="n">4,500</td></tr>
+          <tr class="new"><td><div class="item"><div class="ph-none">無示意照</div><div class="it">斜撐／地錨<small>端柱要抵抗鐵線拉力，不然會往內倒</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=螺旋地錨+拉線" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=螺旋地錨" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">40 組</td><td class="n">3,500</td></tr>
+          <tr class="new"><td><div class="item"><div class="ph-none">無示意照</div><div class="it">緊線器<small>每排 1 個，鐵線鬆了可以再拉緊</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=緊線器+鐵線" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=緊線器" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">20</td><td class="n">1,200</td></tr>
+          <tr class="new"><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="misc" data-file="Cable_ties.jpg" data-t="束線帶"><img src="img/misc.jpg" alt="束線帶"></button></div><div class="it">耐 UV 束帶／吊管勾<small>每 50～80 cm 一個，把滴灌管掛在鐵線下；要買黑色耐候款</small><span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=滴灌管+吊勾+鐵線" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=耐候%20束帶%20黑色" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">2,500</td><td class="n">1,800</td></tr>
+          <tr class="new"><td><div class="item"><div class="ph-none">無示意照</div><div class="it">主管埋地材料<small>主管不架高，埋 20～30 cm；回填用沙保護管子</small></div></div></td><td class="n">約 200 m</td><td class="n">1,500</td></tr>
+
+          <tr class="grp"><td>安裝雜項</td><td></td><td class="n">3,000</td></tr>
+          <tr><td><div class="item"><div class="thumbs"><button class="ph" type="button" data-img="misc" data-file="Cable_ties.jpg" data-t="束線帶"><img src="img/misc.jpg" alt="束線帶"></button></div><div class="it">電線、PVC 保護管、防水膠帶、束帶<span class="lk"><a href="https://www.google.com/search?tbm=isch&amp;q=PVC+電管+束線帶" target="_blank" rel="noopener">更多照片</a><a href="https://shopee.tw/search?keyword=PVC%20電管" target="_blank" rel="noopener">蝦皮</a></span></div></div></td><td class="n">1 式</td><td class="n">3,000</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <aside class="total" aria-label="總金額">
+      <div>
+        <div class="k">設備總金額（估）</div>
+        <div class="big"><small>NT$</small>127,400</div>
+        <div class="range">實際約 11 萬～15 萬。減壓閥數量等高度差確認。樹距還沒量，架高的鐵線和支柱數量是用 1,300 m 滴灌管、約 20 排估的</div>
+      </div>
+      <hr>
+      <div>
+        <div class="k">每月費用</div>
+        <ul>
+          <li><b>4G 物聯網卡</b>約 150 元</li>
+          <li><b>電費</b>約 100 元（馬達每天跑 1～2 小時）</li>
+          <li><b>網站、資料庫</b>免費方案，0 元</li>
+        </ul>
+      </div>
+      <hr>
+      <div>
+        <div class="k">不含</div>
+        <ul>
+          <li>台電申請新設用電的線路補助費，依距離從幾千到幾萬元（要申請有 220V 的單相電）</li>
+          <li>請人施工的工資（架高吊線若請人做，約 8～12 個工，2.5～4 萬）</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<section>
+  <h2>待確認項目</h2>
+  <div class="notes">
+    <div class="note"><h3>果園最高處與最低處的高度差</h3><p>決定 4 區怎麼依高度切、哪幾區要開馬達、哪幾區靠重力，以及減壓閥要幾顆。用手機海拔 App 在最上面和最下面各看一次即可。</p></div>
+    <div class="note"><h3>樹距、行距、排數</h3><p>決定鐵線總長、端柱和中間柱的數量。目前用 1,300 m、約 20 排估。</p></div>
+    <div class="note"><h3>首部位置</h3><p>山泉從哪裡進來、台電從哪裡接。目前假設放在果園最上方的平台。</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>還要注意的事</h2>
+  <div class="notes">
+    <div class="note"><h3>先量山泉水量</h3><p>用水桶接 1 分鐘量一次。旺季 200 棵每天大約要 4～8 噸水，泉水供不上的話就把蓄水桶加大，晚上慢慢存。</p></div>
+    <div class="note"><h3>分區依高度分</h3><p>同一區的樹盡量在差不多的高度。高低差太大的話，壓力補償滴頭也補不了。</p></div>
+    <div class="note"><h3>市電還沒好之前</h3><p>控制箱和感測器可以先裝好測試，馬達等市電接好再接上。工期不用卡住。</p></div>
+    <div class="note"><h3>量好樹距再買鐵線和支柱</h3><p>量一下樹距、行距和每排長度，就能算出鐵線總長和要幾支柱子。滴灌管架在離地約 50 cm，鐵線綁在樹幹上，割草機從下面過。</p></div>
+    <div class="note"><h3>軟體之後再做</h3><p>網站畫面樣稿已做好，等確認後再寫裝置回報 API、即時看板和排程功能。</p></div>
+  </div>
+</section>
+</div>
+
+<div class="lb" id="lb" hidden>
+  <div class="lb-card" role="dialog" aria-modal="true" aria-labelledby="lb-t">
+    <img id="lb-img" alt="">
+    <div class="lb-meta">
+      <b id="lb-t"></b>
+      <span>同類設備示意照，實際型號外觀會不同。</span>
+      <a id="lb-src" href="https://commons.wikimedia.org/" target="_blank" rel="noopener">照片來源：Wikimedia Commons</a>
+    </div>
+    <button class="lb-x" id="lb-close" type="button">關閉</button>
+  </div>
+</div>
+<script>
+(function(){
+  var lb=document.getElementById('lb'),img=document.getElementById('lb-img'),t=document.getElementById('lb-t'),src=document.getElementById('lb-src'),close=document.getElementById('lb-close'),last=null;
+  function hide(){lb.hidden=true;if(last)last.focus();}
+  document.querySelectorAll('.ph').forEach(function(b){
+    b.addEventListener('click',function(){
+      last=b;img.src='img/'+b.dataset.img+'.jpg';img.alt=b.dataset.t;t.textContent=b.dataset.t;
+      src.href='https://commons.wikimedia.org/wiki/File:'+encodeURIComponent(b.dataset.file);
+      lb.hidden=false;close.focus();
+    });
+  });
+  close.addEventListener('click',hide);
+  lb.addEventListener('click',function(e){if(e.target===lb)hide();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!lb.hidden)hide();});
+})();
+</script>
+
+</body></html>

@@ -1,0 +1,677 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<title>吊線滴灌 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* 版面：標題 → 左 3D 場景 + 右零件清單（手機上下堆疊）→ 陡坡注意 → 施工順序 */
+:root{
+  --bg:#f2f5f1; --panel:#ffffff; --ink:#1c2a21; --muted:#5b6a60; --line:#dce5dc;
+  --accent:#2c7a4b; --accent-soft:#e3f1e8; --water:#2f7fc1; --warn:#a15c00; --warn-soft:#fbf0de; --sky:#d3e6f1;
+  --font:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111713; --panel:#19211b; --ink:#e5ece6; --muted:#9bab9f; --line:#2a352d;
+  --accent:#5cbf86; --accent-soft:#1f3326; --water:#72b3ea; --warn:#f0b35c; --warn-soft:#2e2414; --sky:#1a2631; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111713; --panel:#19211b; --ink:#e5ece6; --muted:#9bab9f; --line:#2a352d;
+  --accent:#5cbf86; --accent-soft:#1f3326; --water:#72b3ea; --warn:#f0b35c; --warn-soft:#2e2414; --sky:#1a2631; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.6}
+.wrap{max-width:1320px;margin:0 auto;padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+header h1{font-size:26px;margin:0;text-wrap:balance}
+header p{margin:4px 0 0;color:var(--muted);max-width:72ch}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+@media (max-width:900px){.main{grid-template-columns:minmax(0,1fr)}}
+.stage{position:relative;height:clamp(420px,70vh,720px);border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--sky);touch-action:none}
+.stage canvas{display:block;width:100%;height:100%}
+.ui{position:absolute;display:flex;flex-wrap:wrap;gap:6px;z-index:3}
+.views{top:10px;left:10px;right:10px}
+.ui button{font:inherit;font-size:13px;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.ui button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.ui button:focus-visible,.part:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.toggles{bottom:10px;right:10px}
+.hint{position:absolute;bottom:12px;left:12px;font-size:12px;color:var(--muted);background:var(--panel);padding:3px 9px;border-radius:999px;border:1px solid var(--line);z-index:3}
+@media (max-width:640px){.hint{display:none}}
+.labels{position:absolute;inset:0;pointer-events:none;z-index:2;overflow:hidden}
+.tag{position:absolute;left:0;top:0;display:flex;align-items:center;gap:5px;padding:2px 8px 2px 2px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-size:12px;font-weight:500;white-space:nowrap;box-shadow:0 2px 6px rgb(0 0 0 / .12);pointer-events:auto;cursor:pointer;will-change:transform}
+.tag::after{content:"";position:absolute;left:50%;top:100%;width:1px;height:14px;background:var(--muted)}
+.tag .dot{width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
+.tag.head .dot{background:var(--water)}
+.tag.active{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent);z-index:5}
+.tag.dim{padding:2px 8px;background:var(--water);border-color:var(--water);color:#fff;font-weight:700}
+.tag.plain{background:transparent;border:0;box-shadow:none;color:var(--ink);font-weight:700;font-size:13px;text-shadow:0 0 3px var(--sky),0 0 6px var(--sky)}
+.tag.cluster{padding:4px 10px;background:var(--water);border-color:var(--water);color:#fff;font-weight:700;font-size:13px}
+.tag.zone{padding:0 6px;font-weight:700}
+.tag.plain::after,.tag.dim::after,.tag.zone::after{display:none}
+@media (max-width:640px){.tag:not(.active):not(.dim):not(.plain):not(.cluster):not(.zone) .nm{display:none}.tag:not(.dim):not(.plain):not(.cluster):not(.zone){padding-right:2px}}
+.labels.off .tag{display:none}
+.parts{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:8px;display:flex;flex-direction:column;max-height:clamp(420px,70vh,720px);overflow:auto}
+@media (max-width:900px){.parts{max-height:none}}
+.parts h2{font-size:14px;margin:10px 10px 4px;color:var(--muted);letter-spacing:.02em}
+.part{display:grid;grid-template-columns:24px minmax(0,1fr);gap:2px 10px;text-align:left;font:inherit;color:inherit;background:none;border:0;border-radius:10px;padding:9px 10px;cursor:pointer}
+.part:hover{background:var(--bg)}
+.part.active{background:var(--accent-soft)}
+.part .dot{grid-row:span 3;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-style:normal;font-variant-numeric:tabular-nums}
+.part.head .dot{background:var(--water)}
+.part b{font-size:14px}
+.part span{font-size:13px;color:var(--muted)}
+.part small{font-size:12px;color:var(--accent);font-weight:500;font-variant-numeric:tabular-nums}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+.card h2{font-size:17px;margin:0 0 12px}
+.warns{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.warns div{background:var(--warn-soft);border-radius:12px;padding:12px 14px;min-width:0}
+.warns h3{margin:0 0 4px;font-size:15px;color:var(--warn)}
+.warns p{margin:0;font-size:14px}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.steps li{display:flex;gap:10px;align-items:flex-start;min-width:0}
+.steps li em{flex:none;font-style:normal;width:26px;height:26px;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-weight:700;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+.steps li span{font-size:14px}
+.foot{font-size:13px;color:var(--muted);margin:0}
+.fail{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:var(--muted)}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>吊線滴灌 3D 示意</h1>
+    <p>果園在 40～60° 的陡坡（圖用 45°）。水塔、馬達、肥料桶和電箱放在最上方的平台，分區主管埋地往下接到每一排；滴灌管吊在離地約 50 cm，背負式割草機的割草頭可以從管子下面掃過。拖曳可以旋轉，滾輪或兩指可以縮放，點數字看零件說明。</p>
+  </header>
+
+  <div class="main">
+    <div class="stage" id="stage">
+      <div class="ui views" role="group" aria-label="視角">
+        <button type="button" data-view="all" aria-pressed="true">全景</button>
+        <button type="button" data-view="head" aria-pressed="false">首部設備</button>
+        <button type="button" data-view="box" aria-pressed="false">電箱內部</button>
+        <button type="button" data-view="near" aria-pressed="false">近看吊線</button>
+        <button type="button" data-view="end" aria-pressed="false">端柱與地錨</button>
+        <button type="button" data-view="cutter" aria-pressed="false">背負割草</button>
+      </div>
+      <div class="ui toggles">
+        <button type="button" id="tgLabels" aria-pressed="true">標籤</button>
+        <button type="button" id="tgAnim" aria-pressed="true">滴水與割草</button>
+      </div>
+      <div class="hint">左鍵拖曳旋轉 · 滾輪縮放 · 右鍵平移</div>
+      <div class="labels" id="labels"></div>
+    </div>
+
+    <aside class="parts" aria-label="零件清單">
+      <h2>首部（最上方平台）</h2>
+      <div id="listHead"></div>
+      <h2>果園吊線滴灌</h2>
+      <div id="listField"></div>
+    </aside>
+  </div>
+
+  <section class="card">
+    <h2>陡坡要注意</h2>
+    <div class="warns">
+      <div><h3>滴頭放樹幹上坡側</h3><p>水滴下來會往下坡流，滴頭放在上坡側，水流過樹根才吸得到。放下坡側的話，水會直接流走。</p></div>
+      <div><h3>高低差大，下方要減壓</h3><p>45° 坡每往下走 10 m，高度掉約 7 m，水壓多約 0.7 kg。分區照高度分，每區高低差盡量在 10～15 m 內，下方的區在電動閥後面加減壓閥。</p></div>
+      <div><h3>首部要做平台和遮雨棚</h3><p>水塔、馬達、肥料桶、電箱要放在整平的水泥平台上，馬達和電箱上方加遮雨棚。平台、遮雨棚目前不在預算內。</p></div>
+      <div><h3>割草頭用尼龍線</h3><p>管子在 50 cm 高、鐵線拉緊不會晃，割草頭從下面掃過去不容易碰到。樹幹附近建議用尼龍線割草頭，不要用金屬刀片。</p></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>施工順序</h2>
+    <ol class="steps">
+      <li><em>1</em><span>整平最上方平台，放水塔、馬達、肥料桶、電箱，接好山泉進水管。</span></li>
+      <li><em>2</em><span>每排頭尾立端柱，往外打地錨。</span></li>
+      <li><em>3</em><span>沿樹排拉鐵線，繞樹幹的地方先套舊水管，用緊線器拉緊。</span></li>
+      <li><em>4</em><span>缺樹或樹距超過 5 m 的地方補中間柱。</span></li>
+      <li><em>5</em><span>挖溝埋 A～D 區主管，每排接一支立管上來。</span></li>
+      <li><em>6</em><span>滴灌管用束帶吊在鐵線下，滴頭打在樹幹上坡側。</span></li>
+      <li><em>7</em><span>開水沖管、檢查漏水和各區水壓，最後裝上管尾管塞。</span></li>
+    </ol>
+  </section>
+
+  <p class="foot">圖中只畫 3 排、每排 4 棵樹，首部放在果園最上方是假設的位置。實際要看山泉從哪裡進來、市電從哪裡接，告訴我之後可以照實際位置改。</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function(){
+const stage = document.getElementById('stage');
+const labelsEl = document.getElementById('labels');
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const V = (x,y,z) => new THREE.Vector3(x,y,z);
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let renderer;
+try { renderer = new THREE.WebGLRenderer({antialias:true}); }
+catch(e){
+  const d=document.createElement('div'); d.className='fail'; d.textContent='這台裝置的瀏覽器無法顯示 3D 畫面，請換電腦或較新的手機瀏覽器開啟。'; stage.appendChild(d); return;
+}
+renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+stage.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(42, 1, 0.05, 300);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.minDistance = 0.6;
+controls.maxDistance = 75;
+
+function applySky(){
+  const c = new THREE.Color(css('--sky'));
+  scene.background = c;
+  scene.fog = new THREE.Fog(c, 50, 120);
+}
+applySky();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applySky);
+new MutationObserver(applySky).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+scene.add(new THREE.HemisphereLight(0xf2f7ff, 0x5a6b45, 0.75));
+const sun = new THREE.DirectionalLight(0xffffff, 0.85);
+sun.position.set(6, 30, 16);
+sun.target.position.set(-8, 0, -3);
+scene.add(sun.target);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, {left:-30, right:30, top:26, bottom:-26, near:1, far:80});
+sun.shadow.bias = -0.0006;
+scene.add(sun);
+
+// ---- 地形：z 往前是下坡（45°）；z < -6 是最上方平台；更後面又往上 ----
+const S = 1.0;
+const g = z => z <= -14 ? 6 + (-14 - z) * 0.6 : (z <= -6 ? 6 : -z * S);
+const ROWS = [-3.5, 0, 3.5];
+const FRONT = 3.5;
+const TREES = [-10, -5, 0, 10];
+const POSTX = 5;
+const WZ = -0.16;              // 鐵線與滴灌管在樹幹「上坡側」
+const H_TUBE = 0.5, H_WIRE = 0.57;
+const SUP = [-13, -10, -5, 0, 5, 10, 13];
+function sagAt(x){
+  for (let i=0;i<SUP.length-1;i++){
+    const a=SUP[i], b=SUP[i+1];
+    if (x>=a && x<=b){ const t=(x-a)/(b-a); return 0.03*((b-a)/5)*4*t*(1-t); }
+  }
+  return 0;
+}
+const tubeY = (x,zz) => g(zz) + H_TUBE - sagAt(x);
+const wireY = (x,zz) => g(zz) + H_WIRE - sagAt(x);
+
+const mat = (color, o={}) => new THREE.MeshStandardMaterial(Object.assign({color, roughness:0.8, metalness:0}, o));
+const M = {
+  grass: mat(0x86ad66, {roughness:1}),
+  soil: mat(0x7a5a3c, {roughness:1}),
+  wet: mat(0x4f3d2a, {roughness:1, transparent:true, opacity:0.45}),
+  bark: mat(0x6b4a33, {roughness:0.95, flatShading:true}),
+  leaf: [mat(0x4e8a3e,{flatShading:true}), mat(0x5f9b46,{flatShading:true}), mat(0x467f39,{flatShading:true})],
+  peach: mat(0xf0a3a0, {roughness:0.6}),
+  galv: mat(0xb9c0c6, {metalness:0.6, roughness:0.35}),
+  wire: mat(0xd5dade, {metalness:0.7, roughness:0.3}),
+  pe: mat(0x1d1f21, {roughness:0.55}),
+  clip: mat(0x222222, {roughness:0.7}),
+  dripper: mat(0x6c4fa3, {roughness:0.5}),
+  drop: mat(0x5aa9e6, {roughness:0.1, metalness:0.1, transparent:true, opacity:0.9}),
+  sleeve: mat(0x2b2b2b, {roughness:0.9}),
+  cap: mat(0xc0392b, {roughness:0.5}),
+  tens: mat(0x8e959b, {metalness:0.7, roughness:0.35}),
+  ruler: mat(0x2f7fc1, {roughness:0.4}),
+  concrete: mat(0xb8b5ac, {roughness:1}),
+  tank: mat(0x2f6fb0, {roughness:0.55}),
+  fert: mat(0xefeee8, {roughness:0.6}),
+  lid: mat(0x222831, {roughness:0.6}),
+  brass: mat(0xb08d3c, {metalness:0.6, roughness:0.35}),
+  motor: mat(0x3d6e9e, {metalness:0.3, roughness:0.45}),
+  steel: mat(0xc9cdd1, {metalness:0.7, roughness:0.3}),
+  filter: mat(0x2a5fa8, {roughness:0.5}),
+  actuator: mat(0x4a5560, {roughness:0.5}),
+  box: mat(0xe6e8e3, {roughness:0.6}),
+  plate: mat(0xc9cec8, {roughness:0.8}),
+  white: mat(0xfafafa, {roughness:0.5}),
+  grey: mat(0x8a8f94, {roughness:0.5}),
+  pcb: mat(0x1f6f43, {roughness:0.6}),
+  relay: mat(0x2f5fae, {roughness:0.6}),
+  pole: mat(0x8b6b4a, {roughness:0.9}),
+  cable: mat(0x151515, {roughness:0.8}),
+  conduit: mat(0x7d8288, {roughness:0.7}),
+  hose: mat(0x35506b, {roughness:0.6}),
+  shirt: mat(0x4f6d8a, {roughness:0.9}),
+  pants: mat(0x3a3f45, {roughness:0.9}),
+  skin: mat(0xd9a77f, {roughness:0.8}),
+  helmet: mat(0xe8742a, {roughness:0.5}),
+  engine: mat(0xd9792b, {roughness:0.5}),
+};
+
+function addMesh(geo, m, shadow=true){
+  const o = new THREE.Mesh(geo, m);
+  o.castShadow = shadow; o.receiveShadow = true;
+  scene.add(o); return o;
+}
+const UNIT_CYL = new THREE.CylinderGeometry(1, 1, 1, 10);
+function orient(o, a, b, r, rTop){
+  const dir = new THREE.Vector3().subVectors(b, a);
+  const len = dir.length();
+  o.position.copy(a).addScaledVector(dir, 0.5);
+  o.quaternion.setFromUnitVectors(V(0,1,0), dir.normalize());
+  if (r !== undefined) o.scale.set(r, len, r); else o.scale.y = len;
+}
+function rod(a, b, r, m, rTop){
+  const dir = new THREE.Vector3().subVectors(b, a);
+  const len = dir.length();
+  const o = addMesh(new THREE.CylinderGeometry(rTop ?? r, r, len, 10), m);
+  o.position.copy(a).addScaledVector(dir, 0.5);
+  o.quaternion.setFromUnitVectors(V(0,1,0), dir.normalize());
+  return o;
+}
+function pipe(pts, r, m, seg){
+  const c = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
+  return addMesh(new THREE.TubeGeometry(c, seg || pts.length*4, r, 8, false), m);
+}
+function box(w,h,d, m, x,y,z){ const o = addMesh(new THREE.BoxGeometry(w,h,d), m); o.position.set(x,y,z); return o; }
+function cylX(r, len, m, x,y,z){ const o = addMesh(new THREE.CylinderGeometry(r,r,len,14), m); o.rotation.z = Math.PI/2; o.position.set(x,y,z); return o; }
+function cylY(r, h, m, x,y,z){ const o = addMesh(new THREE.CylinderGeometry(r,r,h,20), m); o.position.set(x,y,z); return o; }
+function strip(x0, x1, z0, z1, m, eps){
+  const geo = new THREE.PlaneGeometry(x1-x0, z1-z0, 1, Math.max(2, Math.round((z1-z0)*4)));
+  geo.rotateX(-Math.PI/2);
+  geo.translate((x0+x1)/2, 0, (z0+z1)/2);
+  const p = geo.attributes.position;
+  for (let i=0;i<p.count;i++) p.setY(i, g(p.getZ(i)) + eps);
+  geo.computeVertexNormals();
+  return addMesh(geo, m, false);
+}
+
+// 地面
+{
+  const geo = new THREE.PlaneGeometry(120, 80, 1, 160);
+  geo.rotateX(-Math.PI/2);
+  geo.translate(0, 0, -5);
+  const p = geo.attributes.position;
+  for (let i=0;i<p.count;i++) p.setY(i, g(p.getZ(i)));
+  geo.computeVertexNormals();
+  addMesh(geo, M.grass, false);
+}
+
+// 桃樹：開心形，3 支主枝
+let seed = 7;
+const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+function tree(x, z){
+  const G = g(z);
+  rod(V(x,G-0.1,z), V(x,G+0.9,z), 0.11, M.bark, 0.08);
+  const base = rnd()*Math.PI*2;
+  for (let k=0;k<3;k++){
+    const a = base + k*Math.PI*2/3;
+    const end = V(x+Math.cos(a)*1.0, G+2.0+rnd()*0.3, z+Math.sin(a)*1.0);
+    rod(V(x,G+0.85,z), end, 0.07, M.bark, 0.04);
+    for (let j=0;j<3;j++){
+      const s = addMesh(new THREE.IcosahedronGeometry(0.55+rnd()*0.25, 0), M.leaf[(k+j)%3]);
+      s.position.set(end.x+(rnd()-0.5)*0.9, end.y+0.25+rnd()*0.4, end.z+(rnd()-0.5)*0.9);
+      s.rotation.set(rnd()*3, rnd()*3, 0);
+    }
+    for (let j=0;j<2;j++){
+      const pch = addMesh(new THREE.SphereGeometry(0.075, 10, 8), M.peach);
+      pch.position.set(end.x+(rnd()-0.5)*0.9, end.y-0.05, end.z+(rnd()-0.5)*0.9);
+    }
+  }
+}
+
+// ---- 果園吊線滴灌 ----
+const drops = [];
+const clipXs = [];
+for (let x=-12.65; x<=12.7; x+=0.7){
+  if ([...TREES, POSTX].every(t => Math.abs(x-t) > 0.28)) clipXs.push(+x.toFixed(2));
+}
+const SLOPE_ROT = -Math.PI/2 + Math.atan(S);
+
+for (const z of ROWS){
+  const zz = z + WZ, Gz = g(zz);
+  TREES.forEach(x => tree(x, z));
+
+  const wp = [];
+  for (let x=-13; x<=13.001; x+=0.5) wp.push(V(x, wireY(x,zz), zz));
+  pipe(wp, 0.011, M.wire, 220);
+
+  const tp = [V(-13.6,Gz+0.03,zz), V(-13.6,Gz+0.4,zz), V(-13.52,Gz+0.49,zz)];
+  for (let x=-13.35; x<=13.4; x+=0.25) tp.push(V(x, tubeY(x,zz), zz));
+  pipe(tp, 0.028, M.pe, 400);
+  rod(V(13.38,tubeY(13.4,zz),zz), V(13.48,tubeY(13.4,zz),zz), 0.038, M.cap);
+
+  for (const x of clipXs) rod(V(x, wireY(x,zz)+0.01, zz), V(x, tubeY(x,zz)+0.02, zz), 0.008, M.clip);
+
+  for (const x of TREES){
+    const t = addMesh(new THREE.TorusGeometry(0.13, 0.026, 8, 24), M.sleeve);
+    t.position.set(x, wireY(x,zz), z);
+    t.rotation.x = Math.PI/2;
+  }
+
+  for (const sx of [-13, 13]){
+    rod(V(sx,Gz-0.15,zz), V(sx,Gz+1.05,zz), 0.042, M.galv);
+    const top = addMesh(new THREE.SphereGeometry(0.05, 10, 8), M.galv); top.position.set(sx, Gz+1.05, zz);
+    const ax = sx + Math.sign(sx)*1.3;
+    rod(V(sx,Gz+1.0,zz), V(ax,Gz+0.06,zz), 0.008, M.wire);
+    const eye = addMesh(new THREE.TorusGeometry(0.05, 0.012, 6, 16), M.galv); eye.position.set(ax, Gz+0.07, zz);
+    const plate = addMesh(new THREE.CylinderGeometry(0.09, 0.09, 0.02, 14), M.galv); plate.position.set(ax, Gz+0.01, zz); plate.rotation.x = Math.atan(S);
+  }
+  rod(V(POSTX,Gz-0.15,zz), V(POSTX,Gz+0.68,zz), 0.032, M.galv);
+  box(0.2, 0.06, 0.06, M.tens, 12.3, wireY(12.3,zz), zz);
+
+  for (const x of TREES){
+    for (const d of [-0.75,-0.25,0.25,0.75]){
+      const dx = x + d, ty = tubeY(dx,zz);
+      const em = addMesh(new THREE.CylinderGeometry(0.028, 0.02, 0.06, 10), M.dripper);
+      em.position.set(dx, ty-0.045, zz);
+      const wet = addMesh(new THREE.CircleGeometry(0.24, 20), M.wet, false);
+      wet.rotation.x = SLOPE_ROT; wet.position.set(dx, Gz+0.012, zz+0.01);
+      const dr = addMesh(new THREE.SphereGeometry(0.022, 8, 6), M.drop, false);
+      drops.push({m:dr, x:dx, y0:ty-0.08, y1:Gz+0.02, z:zz, off:rnd()*1.4});
+    }
+  }
+}
+
+// ---- 首部平台 ----
+const PAD = 6.08, LINE_Y = 6.65, LINE_Z = -9.9;
+box(10, 0.3, 5.5, M.concrete, -19.5, PAD-0.15, -9.75);
+
+// 1 山泉進水管
+pipe([V(-36,6.05,-10.6), V(-24.8,6.05,-10.6), V(-23.8,6.12,-10.55), V(-23.7,7.6,-10.45), V(-23.35,7.75,-10.35)], 0.035, M.pe, 60);
+// 2 水塔
+cylY(0.75, 1.6, M.tank, -22.8, PAD+0.8, -10.3);
+cylY(0.32, 0.08, M.lid, -22.8, PAD+1.64, -10.3);
+rod(V(-22.05,PAD+0.22,-10.3), V(-20.9,PAD+0.22,-10.3), 0.045, M.pe);
+// 3 加壓馬達
+box(0.62, 0.05, 0.36, M.grey, -20.55, PAD+0.025, -10.3);
+cylX(0.17, 0.13, M.motor, -20.8, PAD+0.22, -10.3);
+cylX(0.15, 0.42, M.motor, -20.5, PAD+0.22, -10.3);
+cylX(0.13, 0.06, M.grey, -20.26, PAD+0.22, -10.3);
+rod(V(-20.8,PAD+0.36,-10.3), V(-20.8,LINE_Y,-10.3), 0.045, M.pe);
+rod(V(-20.8,LINE_Y,-10.3), V(-20.8,LINE_Y,LINE_Z), 0.045, M.pe);
+// 主管路
+rod(V(-20.8,LINE_Y,LINE_Z), V(-15.05,LINE_Y,LINE_Z), 0.045, M.pe);
+for (const sx of [-20.4,-18.4,-16.6,-15.2]) rod(V(sx,PAD,LINE_Z), V(sx,LINE_Y-0.04,LINE_Z), 0.025, M.galv);
+// 4 逆止閥
+cylX(0.075, 0.18, M.brass, -20.15, LINE_Y, LINE_Z);
+cylY(0.03, 0.08, M.brass, -20.15, LINE_Y+0.1, LINE_Z);
+// 注肥點（三通）
+cylY(0.06, 0.12, M.brass, -19.6, LINE_Y-0.08, LINE_Z);
+// 7 疊片過濾器
+cylY(0.11, 0.38, M.filter, -18.85, LINE_Y-0.04, LINE_Z);
+cylY(0.12, 0.05, M.lid, -18.85, LINE_Y-0.25, LINE_Z);
+// 8 流量計＋水壓感測
+cylX(0.085, 0.22, M.brass, -18.1, LINE_Y, LINE_Z);
+cylY(0.07, 0.03, M.white, -18.1, LINE_Y+0.09, LINE_Z);
+cylY(0.025, 0.12, M.steel, -17.6, LINE_Y+0.1, LINE_Z);
+cylY(0.04, 0.06, M.steel, -17.6, LINE_Y+0.18, LINE_Z);
+// 9 電動球閥：總閥
+cylX(0.07, 0.16, M.brass, -17.1, LINE_Y, LINE_Z);
+box(0.13, 0.12, 0.12, M.actuator, -17.1, LINE_Y+0.14, LINE_Z);
+
+// 分區閥＋分區主管（埋地往下）
+const ZX = [-16.1, -15.75, -15.4, -15.05];
+const ZEND = [ROWS[0]+WZ, ROWS[1]+WZ, ROWS[2]+WZ, 9.5];
+strip(-16.32, -14.83, -6.95, 9.8, M.soil, 0.006);
+ZX.forEach((x, i) => {
+  rod(V(x,LINE_Y,LINE_Z), V(x,LINE_Y,-7.4), 0.04, M.pe);
+  cylY(0.065, 0.15, M.brass, x, LINE_Y, -8.9).rotation.x = Math.PI/2;
+  box(0.12, 0.12, 0.12, M.actuator, x, LINE_Y+0.13, -8.9);
+  const pts = [V(x,LINE_Y,-7.4), V(x,6.25,-6.9), V(x,6.05,-6.2)];
+  for (let z=-5.8; z<=ZEND[i]+0.001; z+=0.5) pts.push(V(x, g(z)+0.05, z));
+  if (pts[pts.length-1].z < ZEND[i]-0.01) pts.push(V(x, g(ZEND[i])+0.05, ZEND[i]));
+  pipe(pts, 0.04, M.pe, 160);
+  if (i < 3){
+    const zz = ZEND[i], Gz = g(zz);
+    strip(x-0.1, -13.4, zz-0.2, zz+0.2, M.soil, 0.007);
+    rod(V(x,Gz+0.12,zz), V(-13.6,Gz+0.12,zz), 0.034, M.pe);
+    rod(V(x,Gz+0.05,zz), V(x,Gz+0.12,zz), 0.034, M.pe);
+    rod(V(-13.6,Gz+0.03,zz), V(-13.6,Gz+0.12,zz), 0.034, M.pe);
+  }
+});
+
+// 5 肥料桶＋6 隔膜泵
+cylY(0.5, 1.05, M.fert, -19.5, PAD+0.525, -11.35);
+cylY(0.2, 0.06, M.lid, -19.5, PAD+1.08, -11.35);
+cylY(0.03, 0.1, M.steel, -19.3, PAD+1.1, -11.35);
+box(0.24, 0.15, 0.15, M.grey, -19.5, PAD+0.075, -10.55);
+pipe([V(-19.5,PAD+0.08,-10.86), V(-19.5,PAD+0.08,-10.64)], 0.016, M.hose, 4);
+pipe([V(-19.5,PAD+0.16,-10.5), V(-19.55,PAD+0.35,-10.2), V(-19.6,LINE_Y-0.15,-9.95)], 0.016, M.hose, 20);
+
+// 10～14 防水電箱（門打開）
+const EB = {x:-21.6, y:PAD+1.25, z:-11.62};
+rod(V(EB.x,PAD,EB.z-0.13), V(EB.x,PAD+1.75,EB.z-0.13), 0.035, M.galv);
+box(0.6, 0.8, 0.22, M.box, EB.x, EB.y, EB.z);
+box(0.52, 0.72, 0.012, M.plate, EB.x, EB.y, EB.z+0.112);
+{
+  const hinge = new THREE.Group();
+  hinge.position.set(EB.x-0.3, EB.y, EB.z+0.11);
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.8, 0.02), M.box);
+  door.position.x = 0.3; door.castShadow = true;
+  hinge.add(door); hinge.rotation.y = -1.95;
+  scene.add(hinge);
+}
+const FZ = EB.z + 0.14;
+box(0.065, 0.13, 0.06, M.white, EB.x-0.19, EB.y+0.22, FZ);       // 漏電斷路器
+box(0.065, 0.13, 0.06, M.white, EB.x-0.115, EB.y+0.22, FZ);
+box(0.11, 0.13, 0.08, M.grey, EB.x+0.13, EB.y+0.22, FZ+0.01);     // 馬達電磁開關
+box(0.24, 0.1, 0.05, M.steel, EB.x-0.1, EB.y-0.02, FZ);            // 12V 電源
+box(0.15, 0.1, 0.02, M.pcb, EB.x+0.15, EB.y-0.02, FZ-0.01);         // ESP32＋4G
+box(0.22, 0.07, 0.03, M.relay, EB.x, EB.y-0.24, FZ-0.005);         // 繼電器
+rod(V(EB.x+0.2,EB.y+0.4,EB.z), V(EB.x+0.2,EB.y+0.72,EB.z), 0.012, M.cable); // 4G 天線
+pipe([V(EB.x,EB.y-0.4,EB.z), V(EB.x,PAD+0.05,EB.z), V(-21.2,PAD+0.03,-11.0), V(-20.5,PAD+0.03,-10.5)], 0.018, M.conduit, 30);
+
+// 15 台電電表
+rod(V(-24.1,PAD-0.1,-12.2), V(-24.1,PAD+4.6,-12.2), 0.11, M.pole, 0.09);
+box(0.26, 0.34, 0.12, M.white, -24.1, PAD+1.5, -12.06);
+cylY(0.07, 0.01, M.lid, -24.1, PAD+1.55, -11.995).rotation.x = Math.PI/2;
+pipe([V(-24.1,PAD+4.3,-12.1), V(-22.9,PAD+2.6,-11.85), V(EB.x,EB.y+0.4,EB.z)], 0.012, M.cable, 30);
+
+// 高度尺（前排）
+const FZZ = FRONT + WZ, G6 = g(FZZ), RULER_X = -7.2;
+{
+  const top = tubeY(RULER_X,FZZ) - 0.03;
+  rod(V(RULER_X,G6,FZZ), V(RULER_X,top,FZZ), 0.007, M.ruler);
+  rod(V(RULER_X-0.12,G6+0.004,FZZ), V(RULER_X+0.12,G6+0.004,FZZ), 0.007, M.ruler);
+  rod(V(RULER_X-0.12,top,FZZ), V(RULER_X+0.12,top,FZZ), 0.007, M.ruler);
+}
+
+// 28 背負式割草機（人站在樹排下坡側，臉朝上坡）
+const person = new THREE.Group();
+const pm = (geo, m, x,y,z) => { const o = new THREE.Mesh(geo, m); o.position.set(x,y,z); o.castShadow = true; person.add(o); return o; };
+pm(new THREE.CylinderGeometry(0.075,0.07,0.85,8), M.pants, -0.1,0.425,0);
+pm(new THREE.CylinderGeometry(0.075,0.07,0.85,8), M.pants, 0.1,0.425,0);
+pm(new THREE.BoxGeometry(0.4,0.6,0.24), M.shirt, 0,1.15,0);
+pm(new THREE.SphereGeometry(0.12,14,10), M.skin, 0,1.58,0);
+pm(new THREE.SphereGeometry(0.14,14,10,0,Math.PI*2,0,Math.PI/2), M.helmet, 0,1.62,0);
+pm(new THREE.BoxGeometry(0.32,0.36,0.24), M.engine, 0,1.15,0.25);
+for (const sx of [-1, 1]){
+  const arm = new THREE.Mesh(UNIT_CYL, M.shirt); arm.castShadow = true; person.add(arm);
+  orient(arm, V(sx*0.21,1.38,0), V(sx*0.12,0.95,-0.38), 0.045);
+}
+const hoseP = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(0.17,1.0,0.3),V(0.3,0.85,0.05),V(0.15,0.92,-0.42)]),16,0.018,6), M.cable);
+person.add(hoseP);
+const shaft = new THREE.Mesh(UNIT_CYL, M.steel); shaft.castShadow = true; person.add(shaft);
+const head = new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,0.04,18), M.engine); head.castShadow = true; person.add(head);
+head.rotation.x = Math.atan(S);
+scene.add(person);
+
+const PZ = FRONT + 0.95;             // 人站的位置
+const CUT_Z = FRONT - 0.3;            // 割草頭：樹幹上坡側、管子下方
+let px = -9, pdir = 1, swing = 0;
+function placePerson(){
+  person.position.set(px, g(PZ), PZ);
+  const sx = Math.sin(swing) * 0.5;
+  const hp = V(sx, g(CUT_Z) - g(PZ) + 0.07, CUT_Z - PZ);
+  orient(shaft, V(0.12,0.95,-0.38), hp, 0.016);
+  head.position.copy(hp);
+}
+placePerson();
+
+// ---- 零件清單與標籤 ----
+const EBf = (dx,dy) => V(EB.x+dx, EB.y+dy, FZ+0.04);
+const PARTS = [
+  {n:1, g:'head', name:'山泉進水管', desc:'從山泉引水到水塔，取水口要加濾網。', spec:'PE 1" · NT$6,000', pos:()=>V(-26,6.1,-10.6), d:20},
+  {n:2, g:'head', name:'水塔（PE 蓄水桶 2 噸）', desc:'山泉水先存在這裡當緩衝；桶內有浮球開關，沒水就停馬達。', spec:'2 噸＋浮球 · NT$7,500', pos:()=>V(-22.8,PAD+1.7,-10.3), d:40},
+  {n:3, g:'head', name:'加壓馬達 1/2 HP', desc:'從水塔抽水加壓，送到各區。上方要加遮雨棚。', spec:'不鏽鋼 · NT$9,000', pos:()=>V(-20.5,PAD+0.4,-10.3), d:40},
+  {n:4, g:'head', name:'逆止閥', desc:'馬達後面一顆，注肥管一顆，防止水和肥倒流回水塔。', spec:'2 顆 · NT$1,200', pos:()=>V(-20.15,LINE_Y+0.14,LINE_Z), d:9},
+  {n:5, g:'head', name:'肥料桶 500 L', desc:'採收季裝液肥，平時裝液態氮肥；蓋上有液位感測，快空時發 LINE。', spec:'含液位感測 · NT$3,500', pos:()=>V(-19.5,PAD+1.15,-11.35), d:40},
+  {n:6, g:'head', name:'12V 隔膜注肥泵', desc:'從肥料桶吸肥，打進主管的注肥點。', spec:'耐酸鹼 · NT$3,500', pos:()=>V(-19.5,PAD+0.17,-10.55), d:9},
+  {n:7, g:'head', name:'疊片過濾器', desc:'放在注肥點後面，把砂和肥料雜質濾掉，滴頭才不會堵。', spec:'1.5" 120 目 · NT$3,000', pos:()=>V(-18.85,LINE_Y+0.2,LINE_Z), d:9},
+  {n:8, g:'head', name:'流量計＋水壓感測器', desc:'算每區用了多少水和肥；水壓異常（爆管、堵塞）會告警。', spec:'NT$3,300', pos:()=>V(-17.85,LINE_Y+0.25,LINE_Z), d:9},
+  {n:9, g:'head', name:'電動球閥（總閥＋A～D 區）', desc:'控制箱開哪一顆，水就送到哪一區。', spec:'12V × 5 · NT$7,500', pos:()=>V(-15.6,LINE_Y+0.24,-8.9), d:18},
+  {n:10, g:'head', name:'防水電箱 IP65', desc:'放在馬達旁邊、離地 1 m 以上，上方加遮雨棚。11～14 都裝在裡面。', spec:'含 11～13 · NT$4,000', pos:()=>V(EB.x,EB.y+0.46,EB.z), d:40},
+  {n:11, g:'head', name:'漏電斷路器', desc:'市電進來先經過這裡，漏電或短路會自動跳電。', spec:'含在電箱', pos:()=>EBf(-0.15,0.3), d:4, off:V(0.4,0.25,1.2)},
+  {n:12, g:'head', name:'馬達電磁開關', desc:'控制器用小電流去開關馬達的大電流。', spec:'含在電箱', pos:()=>EBf(0.13,0.3), d:4, off:V(0.4,0.25,1.2)},
+  {n:13, g:'head', name:'12V 電源', desc:'把 110V 轉成 12V，給控制器、電動閥、注肥泵用。', spec:'含在電箱', pos:()=>EBf(-0.1,0.05), d:4, off:V(0.4,0.25,1.2)},
+  {n:14, g:'head', name:'ESP32＋4G 控制器、繼電器', desc:'照排程開關馬達和閥，透過中華電信 4G 回報到網站；頂上是 4G 天線。', spec:'NT$2,500', pos:()=>EBf(0.15,0.05), d:4, off:V(0.4,0.25,1.2)},
+  {n:15, g:'head', name:'台電電表', desc:'申請市電後台電裝在電桿上，電線拉到防水電箱。', spec:'線路費另計', pos:()=>V(-24.1,PAD+1.72,-12.06), d:40},
+  {n:16, g:'field', name:'分區主管（A～D 各一條）', desc:'從分區閥往下埋 20～30 cm，每區一條。圖中是還沒回填的樣子。', spec:'PE 1"～1.5" · NT$10,000', pos:()=>V(-15.6,g(-2)+0.08,-2), d:60, off:V(-3.4,2.6,5)},
+  {n:17, g:'field', name:'立管', desc:'從地下的分區主管接上來，在 50 cm 高接滴灌管。', spec:'每排 1 支', pos:()=>V(-13.6,G6+0.32,FZZ), d:12, off:V(-2.4,1.2,3)},
+  {n:18, g:'field', name:'鍍鋅鐵線 #12', desc:'沿樹排的等高線拉一條，滴灌管掛在下面。', spec:'約 1,400 m · NT$4,500', pos:()=>V(-7.5,wireY(-7.5,FZZ),FZZ), d:60},
+  {n:19, g:'field', name:'滴灌管 16 mm', desc:'吊在鐵線下，離地約 50 cm。', spec:'約 1,300 m · NT$9,000', pos:()=>V(2.6,tubeY(2.6,FZZ),FZZ), d:60},
+  {n:20, g:'field', name:'耐 UV 束帶／吊管勾', desc:'每 50～80 cm 一個，把滴灌管吊在鐵線上。', spec:'約 2,500 個 · NT$1,800', pos:()=>V(-2.15,tubeY(-2.15,FZZ)+0.04,FZZ), d:10},
+  {n:21, g:'field', name:'止漏壓力補償滴頭', desc:'每棵 4 顆，放在樹幹上坡側，水往下流會經過樹根；關水後不會從低處漏光。', spec:'800 顆 · NT$7,200', pos:()=>V(0.25,tubeY(0.25,FZZ)-0.05,FZZ), d:10},
+  {n:22, g:'field', name:'端柱 鍍鋅管 3/4"', desc:'每排頭尾各一支，打入土裡約 60 cm。', spec:'約 40 支 · NT$9,000', pos:()=>V(13,G6+1.07,FZZ), d:60},
+  {n:23, g:'field', name:'斜拉線＋地錨', desc:'從端柱頂往外拉到地錨，抵住鐵線拉力，柱子才不會往內倒。', spec:'約 40 組 · NT$3,500', pos:()=>V(14.3,G6+0.08,FZZ), d:14},
+  {n:24, g:'field', name:'緊線器', desc:'每排一個，鐵線鬆了轉一轉就拉緊。', spec:'約 20 個 · NT$1,200', pos:()=>V(12.3,wireY(12.3,FZZ)+0.03,FZZ), d:10},
+  {n:25, g:'field', name:'中間補柱', desc:'沒有樹或樹距超過 5 m 的地方補一支。', spec:'約 30 支 · NT$4,500', pos:()=>V(POSTX,G6+0.68,FZZ), d:30},
+  {n:26, g:'field', name:'繞樹處套軟管', desc:'鐵線繞過樹幹的地方套一段舊水管，避免勒傷樹皮；每年檢查一次。', spec:'用舊水管即可', pos:()=>V(-5,wireY(-5,FZZ)+0.03,FRONT), d:10},
+  {n:27, g:'field', name:'管尾管塞', desc:'每排最後一段，定期打開放水沖砂。', spec:'每排 1 個', pos:()=>V(13.45,tubeY(13.4,FZZ),FZZ), d:10},
+  {n:28, g:'field', name:'背負式割草機', desc:'人站在樹排下坡側，割草頭伸到管子下方，沿著樹排割過去。', spec:'不用避開管子', pos:()=>V(person.position.x, person.position.y+1.85, person.position.z), d:60, off:V(2.8,1.6,3.4)},
+];
+const EXTRA = [
+  {cls:'dim', text:'離地約 50 cm', pos:()=>V(RULER_X,G6+0.25,FZZ+0.05), d:14},
+  {cls:'plain', text:'↑ 上坡 約 45°', pos:()=>V(4,g(-4.5)+0.3,-4.5), d:200},
+  {cls:'cluster', text:'首部設備 ▸', pos:()=>V(-20,PAD+2.6,-10.5), far:18, view:'head'},
+  {cls:'plain', text:'往 D 區 ↓', pos:()=>V(-15.05,g(8.5)+0.3,8.5), d:40},
+  ...['A','B','C','D'].map((k,i)=>({cls:'tag zone', text:k+' 區', pos:()=>V(ZX[i],LINE_Y+0.42,-8.9), d:5})),
+];
+
+const tags = [];
+let active = null;
+function setActive(n){
+  active = n;
+  tags.forEach(t => t.el.classList.toggle('active', t.n !== null && t.n === n));
+  document.querySelectorAll('.part').forEach(b => b.classList.toggle('active', +b.dataset.n === n));
+}
+PARTS.forEach(p => {
+  const b = document.createElement('button');
+  b.type='button'; b.className='part' + (p.g==='head' ? ' head' : ''); b.dataset.n=p.n;
+  b.innerHTML = `<i class="dot">${p.n}</i><b></b><span></span><small></small>`;
+  b.querySelector('b').textContent=p.name; b.querySelector('span').textContent=p.desc; b.querySelector('small').textContent=p.spec;
+  b.addEventListener('click', () => focusPart(p));
+  document.getElementById(p.g==='head' ? 'listHead' : 'listField').appendChild(b);
+
+  const el = document.createElement('div');
+  el.className='tag' + (p.g==='head' ? ' head' : '');
+  el.innerHTML=`<span class="dot">${p.n}</span><span class="nm"></span>`;
+  el.querySelector('.nm').textContent = p.name;
+  el.title = p.desc;
+  el.addEventListener('click', () => focusPart(p));
+  labelsEl.appendChild(el);
+  tags.push({n:p.n, el, pos:p.pos, d:p.d});
+});
+EXTRA.forEach(x => {
+  const el = document.createElement('div');
+  el.className = 'tag ' + x.cls; el.textContent = x.text;
+  if (x.view) el.addEventListener('click', () => { setActive(null); setView(x.view); });
+  labelsEl.appendChild(el);
+  tags.push({n:null, el, pos:x.pos, d:x.d ?? Infinity, far:x.far, lift: x.cls==='cluster' ? 0 : (x.cls.includes('zone') || x.cls==='plain' || x.cls==='dim' ? 0 : 14)});
+});
+
+// ---- 視角 ----
+const isNarrow = () => stage.clientWidth / stage.clientHeight < 1;
+const VIEWS = {
+  all:    {t:()=>V(-8,2,-2),                       o:V(14,10,28)},
+  head:   {t:()=>V(-19.8,PAD+0.7,-10.3),           o:V(3,3.6,7)},
+  box:    {t:()=>V(EB.x,EB.y,EB.z+0.1),            o:V(0.55,0.35,1.75)},
+  near:   {t:()=>V(-1.5,tubeY(-1.5,FZZ),FZZ),      o:V(2.4,1.4,3.2)},
+  end:    {t:()=>V(13.3,G6+0.5,FZZ),               o:V(2.6,1.6,3.6)},
+  cutter: {t:()=>V(person.position.x,person.position.y+0.9,person.position.z-0.4), o:V(2.6,1.4,3.6)},
+};
+let fly = null;
+function flyTo(target, offset){
+  const k = isNarrow() ? 1.6 : 1;
+  const toPos = target.clone().add(offset.clone().multiplyScalar(k));
+  if (reduced){ camera.position.copy(toPos); controls.target.copy(target); return; }
+  fly = {p0:camera.position.clone(), t0:controls.target.clone(), p1:toPos, t1:target.clone(), s:performance.now(), d:1000};
+}
+function setView(name){
+  document.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === name)));
+  flyTo(VIEWS[name].t(), VIEWS[name].o);
+}
+function focusPart(p){
+  setActive(p.n);
+  document.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed','false'));
+  flyTo(p.pos(), p.off || (p.g==='head' ? V(1.4,1.2,2.8) : V(2.4,1.3,3.2)));
+}
+document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => { setActive(null); setView(b.dataset.view); }));
+
+const tgLabels = document.getElementById('tgLabels');
+tgLabels.addEventListener('click', () => {
+  const on = tgLabels.getAttribute('aria-pressed') !== 'true';
+  tgLabels.setAttribute('aria-pressed', String(on));
+  labelsEl.classList.toggle('off', !on);
+});
+let anim = !reduced;
+const tgAnim = document.getElementById('tgAnim');
+tgAnim.setAttribute('aria-pressed', String(anim));
+tgAnim.addEventListener('click', () => { anim = !anim; tgAnim.setAttribute('aria-pressed', String(anim)); });
+
+function resize(){
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage);
+resize();
+{
+  const v = VIEWS.all, k = isNarrow() ? 1.6 : 1;
+  camera.position.copy(v.t().add(v.o.clone().multiplyScalar(k)));
+  controls.target.copy(v.t());
+}
+
+const tmp = new THREE.Vector3();
+let last = performance.now(), clock = 0;
+function frame(now){
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (anim){
+    clock += dt;
+    px += pdir * dt * 0.5;
+    if (px > 9){ px = 9; pdir = -1; }
+    if (px < -9){ px = -9; pdir = 1; }
+    swing += dt * 2.4;
+    head.rotateY(dt * 25);
+    placePerson();
+  }
+  for (const d of drops){
+    d.m.visible = anim;
+    if (!anim) continue;
+    const t = ((clock + d.off) % 1.4) / 1.4;
+    d.m.position.set(d.x, d.y0 - (d.y0 - d.y1) * t * t, d.z);
+  }
+  if (fly){
+    const t = Math.min(1, (now - fly.s) / fly.d), e = t<0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+    camera.position.lerpVectors(fly.p0, fly.p1, e);
+    controls.target.lerpVectors(fly.t0, fly.t1, e);
+    if (t >= 1) fly = null;
+  }
+  controls.update();
+  renderer.render(scene, camera);
+
+  const w = stage.clientWidth, h = stage.clientHeight;
+  for (const t of tags){
+    const p = t.pos();
+    const dist = camera.position.distanceTo(p);
+    const isActive = t.n !== null && t.n === active;
+    let show = isActive || (dist <= t.d && (t.far === undefined || dist > t.far));
+    if (show){
+      tmp.copy(p).project(camera);
+      show = tmp.z < 1 && Math.abs(tmp.x) < 1.05 && Math.abs(tmp.y) < 1.05;
+    }
+    t.el.style.visibility = show ? 'visible' : 'hidden';
+    if (!show) continue;
+    const x = (tmp.x*0.5+0.5)*w, y = (-tmp.y*0.5+0.5)*h;
+    const lift = t.lift ?? 14;
+    t.el.style.transform = `translate(${x}px,${y - lift}px) translate(-50%,-100%)`;
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>

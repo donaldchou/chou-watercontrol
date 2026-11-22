@@ -1,0 +1,454 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<title>果園控制電箱設計</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* 版面：工程圖風格。標題 → 盤面配置＋門板 → 接線圖 → 對照表 → 材料 → 安全設計 → 待確認 */
+:root{
+  --bg:#f4f5f2; --paper:#ffffff; --ink:#1e2622; --muted:#5f6b64; --line:#d9ded8; --grid:#eef1ec;
+  --comp:#eef1ed; --comp-ink:#26302b; --duct:#e3e6e1;
+  --ac:#c2410c; --dc:#1f6fb8; --sig:#2f855a; --pe:#8a8a12; --accent:#2c7a4b; --accent-soft:#e4f1e8;
+  --font:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121614; --paper:#1a1f1c; --ink:#e4e9e5; --muted:#9aa69f; --line:#2d3530; --grid:#202622;
+  --comp:#242b27; --comp-ink:#e4e9e5; --duct:#2a312d;
+  --ac:#f07a45; --dc:#5ea8ec; --sig:#5cc48a; --pe:#c9c94a; --accent:#5cbf86; --accent-soft:#1f3326; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121614; --paper:#1a1f1c; --ink:#e4e9e5; --muted:#9aa69f; --line:#2d3530; --grid:#202622;
+  --comp:#242b27; --comp-ink:#e4e9e5; --duct:#2a312d;
+  --ac:#f07a45; --dc:#5ea8ec; --sig:#5cc48a; --pe:#c9c94a; --accent:#5cbf86; --accent-soft:#1f3326; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.6}
+.wrap{max-width:1180px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+header h1{font-size:27px;margin:0;text-wrap:balance}
+header p{margin:6px 0 0;color:var(--muted);max-width:74ch}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;font-size:13px;color:var(--muted)}
+.meta b{color:var(--ink);font-weight:500}
+.sheet{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.sheet h2{font-size:18px;margin:0 0 4px}
+.sheet > p.sub{margin:0 0 14px;color:var(--muted);font-size:14px}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+svg text{font-family:var(--font)}
+.two{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.two{grid-template-columns:minmax(0,1fr)}}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:22px;height:3px;border-radius:2px;display:inline-block}
+.legend i.box{width:14px;height:14px;border-radius:3px;border:1px solid var(--muted)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12.5px;color:var(--muted);font-weight:500;letter-spacing:.02em}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+code{font-family:var(--mono);font-size:12.5px;background:var(--grid);padding:1px 5px;border-radius:4px;white-space:nowrap}
+.num{display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--paper);font-size:11.5px;font-weight:700;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.t-ac{color:var(--ac)} .t-dc{color:var(--dc)} .t-sig{color:var(--sig)}
+.tables{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:860px){.tables{grid-template-columns:minmax(0,1fr)}}
+.tables h3{font-size:15px;margin:0 0 6px}
+tfoot td{font-weight:700;border-bottom:0}
+.muted{color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.cards div{border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
+.cards h3{margin:0 0 4px;font-size:15px}
+.cards p{margin:0;font-size:14px;color:var(--muted)}
+.todo{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+.foot{font-size:13px;color:var(--muted);margin:0}
+/* SVG 共用 */
+.c{fill:var(--comp);stroke:var(--comp-ink);stroke-width:1.2}
+.ct{fill:var(--comp-ink);font-size:11px;font-weight:500}
+.cs{fill:var(--muted);font-size:9.5px}
+.duct{fill:var(--duct);stroke:var(--line)}
+.rail{fill:var(--line)}
+.mk circle{fill:var(--ink)} .mk text{fill:var(--paper);font-size:10px;font-weight:700}
+.dim{stroke:var(--muted);stroke-width:1;fill:none}
+.dimt{fill:var(--muted);font-size:11px}
+.w-ac{stroke:var(--ac);stroke-width:2.4;fill:none}
+.w-dc{stroke:var(--dc);stroke-width:2.4;fill:none}
+.w-sig{stroke:var(--sig);stroke-width:2;fill:none}
+.w-pe{stroke:var(--pe);stroke-width:2;fill:none;stroke-dasharray:6 4}
+.nd{fill:var(--ink)}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>果園控制電箱設計</h1>
+    <p>放在首部平台、馬達旁邊的防水電箱。裡面分三層：上層是 220V 電源和馬達開關，中層是 ESP32 控制板和繼電器，下層是接外面設備的端子台。缺水、過載和緊急停止這三個保護直接用電線串在馬達開關上，就算程式當掉，馬達也一定會停。</p>
+    <div class="meta">
+      <span>箱體 <b>IP65 400 × 500 × 200 mm</b></span>
+      <span>電源 <b>單相 220V（馬達、電箱都用 220V）</b></span>
+      <span>控制電壓 <b>12V 直流</b></span>
+      <span>版本 <b>初稿，施工前請電工確認</b></span>
+    </div>
+  </header>
+
+  <!-- 1 盤面配置 -->
+  <section class="sheet">
+    <h2>盤面配置圖</h2>
+    <p class="sub">打開門看到的底板。圖上的黑色數字對應下面的材料清單。</p>
+    <div class="two">
+      <div class="scroll">
+        <svg viewBox="0 0 560 640" style="min-width:520px;width:100%;height:auto" role="img" aria-label="電箱底板配置圖">
+          <!-- 箱體與底板 -->
+          <rect x="44" y="36" width="432" height="532" rx="10" fill="none" stroke="var(--ink)" stroke-width="2"/>
+          <rect x="60" y="50" width="400" height="500" rx="3" fill="var(--paper)" stroke="var(--muted)"/>
+          <!-- 尺寸 -->
+          <path class="dim" d="M60 590 H460 M60 584 V596 M460 584 V596"/>
+          <text class="dimt" x="260" y="608" text-anchor="middle">底板 400 mm</text>
+          <path class="dim" d="M500 50 V550 M494 50 H506 M494 550 H506"/>
+          <text class="dimt" x="512" y="304" transform="rotate(90 512 304)" text-anchor="middle">500 mm</text>
+
+          <!-- 線槽 -->
+          <rect class="duct" x="62" y="54" width="396" height="16"/>
+          <rect class="duct" x="62" y="186" width="282" height="16"/>
+          <rect class="duct" x="62" y="368" width="372" height="16"/>
+          <rect class="duct" x="438" y="214" width="18" height="250"/>
+          <text class="cs" x="66" y="65">線槽</text>
+
+          <!-- 上層：220V -->
+          <rect class="rail" x="70" y="121" width="270" height="8"/>
+          <text class="cs" x="66" y="84" style="fill:var(--ac);font-weight:700">上層 220V 電源</text>
+          <rect class="c" x="75" y="90" width="36" height="80" rx="3"/><text class="ct" x="93" y="140" text-anchor="middle">防雷</text>
+          <rect class="c" x="117" y="90" width="36" height="80" rx="3"/><text class="ct" x="135" y="140" text-anchor="middle">漏電</text>
+          <rect class="c" x="159" y="90" width="36" height="80" rx="3"/><text class="ct" x="177" y="140" text-anchor="middle">馬達</text>
+          <rect class="c" x="201" y="90" width="20" height="80" rx="3"/><text class="ct" x="211" y="140" text-anchor="middle" font-size="9">控</text>
+          <rect class="c" x="233" y="92" width="48" height="78" rx="3"/><text class="ct" x="257" y="128" text-anchor="middle">電磁</text><text class="ct" x="257" y="142" text-anchor="middle">開關</text>
+          <rect class="c" x="287" y="100" width="48" height="62" rx="3"/><text class="ct" x="311" y="128" text-anchor="middle">積熱</text><text class="ct" x="311" y="142" text-anchor="middle">電驛</text>
+          <rect class="c" x="352" y="78" width="98" height="128" rx="3"/><text class="ct" x="401" y="136" text-anchor="middle">12V 電源</text><text class="cs" x="401" y="152" text-anchor="middle">100W</text>
+
+          <!-- 中層：控制 -->
+          <text class="cs" x="66" y="216" style="fill:var(--sig);font-weight:700">中層 控制</text>
+          <rect class="c" x="75" y="224" width="150" height="98" rx="4"/>
+          <rect x="88" y="240" width="56" height="30" rx="2" fill="none" stroke="var(--comp-ink)"/><text class="cs" x="116" y="259" text-anchor="middle">ESP32</text>
+          <rect x="152" y="240" width="60" height="30" rx="2" fill="none" stroke="var(--comp-ink)"/><text class="cs" x="182" y="259" text-anchor="middle">A7670 4G</text>
+          <text class="ct" x="150" y="300" text-anchor="middle">控制板</text>
+          <rect class="c" x="75" y="332" width="66" height="28" rx="3"/><text class="ct" x="108" y="350" text-anchor="middle">12→5V</text>
+          <rect class="c" x="149" y="332" width="66" height="28" rx="3"/><text class="ct" x="182" y="350" text-anchor="middle">RS485</text>
+          <rect class="c" x="240" y="228" width="186" height="76" rx="3"/>
+          <text class="ct" x="333" y="252" text-anchor="middle">8 路繼電器 12V</text>
+          <g font-size="9.5">
+            <rect x="250" y="266" width="18" height="26" rx="2" fill="var(--paper)" stroke="var(--comp-ink)"/><text class="cs" x="259" y="283" text-anchor="middle">1</text>
+            <rect x="271" y="266" width="18" height="26" rx="2" fill="var(--paper)" stroke="var(--comp-ink)"/><text class="cs" x="280" y="283" text-anchor="middle">2</text>
+            <rect x="292" y="266" width="18" height="26" rx="2" fill="var(--paper)" stroke="var(--comp-ink)"/><text class="cs" x="301" y="283" text-anchor="middle">3</text>
+            <rect x="313" y="266" width="18" height="26" rx="2" fill="var(--paper)" stroke="var(--comp-ink)"/><text class="cs" x="322" y="283" text-anchor="middle">4</text>
+            <rect x="334" y="266" width="18" height="26" rx="2" fill="var(--paper)" stroke="var(--comp-ink)"/><text class="cs" x="343" y="283" text-anchor="middle">5</text>
+            <rect x="355" y="266" width="18" height="26" rx="2" fill="var(--paper)" stroke="var(--comp-ink)"/><text class="cs" x="364" y="283" text-anchor="middle">6</text>
+            <rect x="376" y="266" width="18" height="26" rx="2" fill="var(--paper)" stroke="var(--comp-ink)"/><text class="cs" x="385" y="283" text-anchor="middle">7</text>
+            <rect x="397" y="266" width="18" height="26" rx="2" fill="var(--paper)" stroke="var(--comp-ink)"/><text class="cs" x="406" y="283" text-anchor="middle">8</text>
+          </g>
+          <rect x="240" y="314" width="186" height="46" rx="3" fill="none" stroke="var(--muted)" stroke-dasharray="4 4"/>
+          <text class="cs" x="333" y="341" text-anchor="middle">預留空間（之後加區或加感測器）</text>
+
+          <!-- 下層：端子 -->
+          <text class="cs" x="66" y="398" style="fill:var(--dc);font-weight:700">下層 對外接線</text>
+          <rect class="rail" x="70" y="428" width="364" height="8"/>
+          <g>
+            <rect class="c" x="75" y="406" width="17" height="52" rx="2"/><rect class="c" x="93" y="406" width="17" height="52" rx="2"/><rect class="c" x="111" y="406" width="17" height="52" rx="2"/><rect class="c" x="129" y="406" width="17" height="52" rx="2"/>
+            <text class="cs" x="83.5" y="472" text-anchor="middle">F1</text><text class="cs" x="101.5" y="472" text-anchor="middle">F2</text><text class="cs" x="119.5" y="472" text-anchor="middle">F3</text><text class="cs" x="137.5" y="472" text-anchor="middle">F4</text>
+            <text class="cs" x="110" y="488" text-anchor="middle">保險絲</text>
+          </g>
+          <g id="terms"></g>
+          <rect x="398" y="414" width="34" height="30" rx="3" fill="none" stroke="var(--pe)" stroke-width="2"/>
+          <circle cx="407" cy="429" r="2.5" fill="var(--pe)"/><circle cx="415" cy="429" r="2.5" fill="var(--pe)"/><circle cx="423" cy="429" r="2.5" fill="var(--pe)"/>
+          <text class="cs" x="415" y="460" text-anchor="middle">接地排</text>
+
+          <!-- 箱外：天線、防水接頭、透氣閥 -->
+          <rect x="398" y="20" width="10" height="16" fill="var(--ink)"/><path d="M403 20 V2" stroke="var(--ink)" stroke-width="3"/>
+          <text class="dimt" x="414" y="16">4G 天線</text>
+          <g id="glands"></g>
+          <text class="dimt" x="260" y="630" text-anchor="middle"> </text>
+
+          <!-- 編號 -->
+          <g class="mk" id="marks"></g>
+        </svg>
+      </div>
+
+      <div>
+        <svg viewBox="0 0 260 340" style="width:100%;max-width:320px;height:auto;display:block;margin:0 auto" role="img" aria-label="電箱門板">
+          <rect x="20" y="10" width="220" height="300" rx="10" fill="var(--paper)" stroke="var(--ink)" stroke-width="2"/>
+          <text class="ct" x="130" y="36" text-anchor="middle" font-size="13">門板外側</text>
+          <circle cx="70" cy="80" r="14" fill="#f5f5f0" stroke="var(--comp-ink)"/>
+          <circle cx="130" cy="80" r="14" fill="#38a169" stroke="var(--comp-ink)"/>
+          <circle cx="190" cy="80" r="14" fill="#d64545" stroke="var(--comp-ink)"/>
+          <text class="ct" x="70" y="112" text-anchor="middle">電源</text>
+          <text class="ct" x="130" y="112" text-anchor="middle">馬達運轉</text>
+          <text class="ct" x="190" y="112" text-anchor="middle">異常</text>
+          <circle cx="130" cy="168" r="22" class="c"/>
+          <rect x="126" y="148" width="8" height="40" rx="3" fill="var(--comp-ink)" transform="rotate(45 130 168)"/>
+          <text class="cs" x="86" y="156" text-anchor="middle" font-size="11">手動</text>
+          <text class="cs" x="130" y="138" text-anchor="middle" font-size="11">停</text>
+          <text class="cs" x="174" y="156" text-anchor="middle" font-size="11">自動</text>
+          <text class="ct" x="130" y="208" text-anchor="middle">手動／停／自動</text>
+          <rect x="95" y="222" width="70" height="70" rx="6" fill="#f2c230"/>
+          <circle cx="130" cy="257" r="25" fill="#d0312d" stroke="#7a1a18" stroke-width="2"/>
+          <text x="130" y="262" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">緊急停止</text>
+        </svg>
+        <table style="margin-top:10px">
+          <tbody>
+            <tr><td>電源燈</td><td class="muted">市電有進來就亮</td></tr>
+            <tr><td>運轉燈</td><td class="muted">跟馬達線圈並聯，馬達真的在轉才亮</td></tr>
+            <tr><td>異常燈</td><td class="muted">控制器偵測到缺水、壓力異常或斷網時亮（繼電器 8）</td></tr>
+            <tr><td>手動</td><td class="muted">不經控制器直接開馬達，控制板壞了也能澆水</td></tr>
+            <tr><td>停</td><td class="muted">維修時用，控制器也開不了馬達</td></tr>
+            <tr><td>自動</td><td class="muted">平常放這格，照排程跑</td></tr>
+            <tr><td>緊急停止</td><td class="muted">拍下去馬達立刻停，轉開才能恢復</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 接線圖 -->
+  <section class="sheet">
+    <h2>電源與控制接線圖</h2>
+    <p class="sub">上面兩行是電從哪裡來、送到哪裡；最下面一行是馬達開關的保護迴路。</p>
+    <div class="scroll">
+      <svg viewBox="0 0 960 520" style="min-width:860px;width:100%;height:auto" role="img" aria-label="電箱接線圖">
+        <!-- 第一行：220V 主電源到馬達 -->
+        <text class="cs" x="20" y="24" style="fill:var(--ac);font-weight:700" font-size="12">220V 主電源 → 馬達</text>
+        <path class="w-ac" d="M110 70 H150 M220 70 H250 M340 70 H400 M480 70 H510 M600 70 H630 M720 70 H760"/>
+        <rect class="c" x="20" y="48" width="90" height="44" rx="4"/><text class="ct" x="65" y="68" text-anchor="middle">台電電表</text><text class="cs" x="65" y="83" text-anchor="middle">單相三線</text>
+        <rect class="c" x="150" y="48" width="70" height="44" rx="4"/><text class="ct" x="185" y="74" text-anchor="middle">① 防雷</text>
+        <path class="w-pe" d="M185 92 V126"/><path d="M173 128 H197 M177 133 H193 M181 138 H189" stroke="var(--pe)" stroke-width="2"/>
+        <rect class="c" x="250" y="48" width="90" height="44" rx="4"/><text class="ct" x="295" y="68" text-anchor="middle">② 漏電斷路器</text><text class="cs" x="295" y="83" text-anchor="middle">20A 30mA</text>
+        <circle class="nd" cx="370" cy="70" r="4"/>
+        <rect class="c" x="400" y="48" width="80" height="44" rx="4"/><text class="ct" x="440" y="68" text-anchor="middle">③ 馬達分路</text><text class="cs" x="440" y="83" text-anchor="middle">2P 10A</text>
+        <rect class="c" x="510" y="48" width="90" height="44" rx="4"/><text class="ct" x="555" y="68" text-anchor="middle">⑤ 電磁開關</text><text class="cs" x="555" y="83" text-anchor="middle">主接點</text>
+        <rect class="c" x="630" y="48" width="90" height="44" rx="4"/><text class="ct" x="675" y="68" text-anchor="middle">⑥ 積熱電驛</text><text class="cs" x="675" y="83" text-anchor="middle">過載保護</text>
+        <rect class="c" x="760" y="44" width="130" height="52" rx="26"/><text class="ct" x="825" y="68" text-anchor="middle">加壓馬達</text><text class="cs" x="825" y="83" text-anchor="middle">1/2 HP</text>
+
+        <!-- 第二行：控制電源 -->
+        <text class="cs" x="20" y="164" style="fill:var(--dc);font-weight:700" font-size="12">控制電源 → 12V／5V</text>
+        <path class="w-ac" d="M370 74 V190 H400 M480 190 H520"/>
+        <circle class="nd" cx="500" cy="190" r="4"/>
+        <rect class="c" x="400" y="168" width="80" height="44" rx="4"/><text class="ct" x="440" y="188" text-anchor="middle">④ 控制分路</text><text class="cs" x="440" y="203" text-anchor="middle">2P 6A</text>
+        <rect class="c" x="520" y="168" width="100" height="44" rx="4"/><text class="ct" x="570" y="188" text-anchor="middle">⑦ 12V 電源</text><text class="cs" x="570" y="203" text-anchor="middle">220V → 12V</text>
+        <path class="w-dc" d="M620 190 H650 M650 140 V320"/>
+        <path class="w-dc" d="M650 140 H672 M700 140 H730 M650 200 H672 M700 200 H730 M650 260 H672 M700 260 H850 M650 320 H672 M700 320 H730"/>
+        <rect class="c" x="672" y="128" width="28" height="24" rx="3"/><text class="cs" x="686" y="144" text-anchor="middle">F1</text>
+        <rect class="c" x="672" y="188" width="28" height="24" rx="3"/><text class="cs" x="686" y="204" text-anchor="middle">F2</text>
+        <rect class="c" x="672" y="248" width="28" height="24" rx="3"/><text class="cs" x="686" y="264" text-anchor="middle">F3</text>
+        <rect class="c" x="672" y="308" width="28" height="24" rx="3"/><text class="cs" x="686" y="324" text-anchor="middle">F4</text>
+        <rect class="c" x="730" y="120" width="110" height="40" rx="4"/><text class="ct" x="785" y="144" text-anchor="middle">⑩ 8 路繼電器</text>
+        <path class="w-dc" d="M840 140 H858"/>
+        <text class="cs" x="862" y="136" font-size="11">總閥・A–D 閥</text><text class="cs" x="862" y="151" font-size="11">注肥泵・異常燈</text>
+        <rect class="c" x="730" y="180" width="110" height="40" rx="4"/><text class="ct" x="785" y="204" text-anchor="middle">⑧ 12V → 5V</text>
+        <path class="w-sig" d="M840 200 H858"/>
+        <text class="cs" x="862" y="196" font-size="11">⑨ ESP32＋4G</text><text class="cs" x="862" y="211" font-size="11">水壓感測器</text>
+        <text class="cs" x="862" y="264" font-size="11">流量計、土壤濕度</text><text class="cs" x="862" y="279" font-size="11">×4（RS485）</text>
+        <text class="cs" x="740" y="324" font-size="11">備用</text>
+
+        <!-- 第三行：馬達線圈保護迴路 -->
+        <text class="cs" x="20" y="374" style="fill:var(--ac);font-weight:700" font-size="12">馬達線圈保護迴路（硬體連鎖）</text>
+        <path class="w-ac" d="M500 194 V350 H40 V430 H60"/>
+        <path class="w-ac" d="M160 430 H180 M290 430 H310 M420 430 H440 M440 398 V462 M440 398 H470 M440 462 H470 M600 398 H630 M600 462 H630 M630 398 V462 M630 430 H660 M770 430 H800"/>
+        <rect class="c" x="60" y="410" width="100" height="40" rx="4"/><text class="ct" x="110" y="428" text-anchor="middle">緊急停止</text><text class="cs" x="110" y="442" text-anchor="middle">常閉接點</text>
+        <rect class="c" x="180" y="410" width="110" height="40" rx="4"/><text class="ct" x="235" y="428" text-anchor="middle">水塔浮球</text><text class="cs" x="235" y="442" text-anchor="middle">缺水就斷開</text>
+        <rect class="c" x="310" y="410" width="110" height="40" rx="4"/><text class="ct" x="365" y="428" text-anchor="middle">⑥ 過載接點</text><text class="cs" x="365" y="442" text-anchor="middle">95–96</text>
+        <rect class="c" x="470" y="380" width="130" height="36" rx="4"/><text class="ct" x="535" y="403" text-anchor="middle">自動：繼電器 1</text>
+        <rect class="c" x="470" y="444" width="130" height="36" rx="4"/><text class="ct" x="535" y="467" text-anchor="middle">手動：直通</text>
+        <text class="cs" x="448" y="390">手動／停／自動</text>
+        <rect class="c" x="660" y="410" width="110" height="40" rx="4"/><text class="ct" x="715" y="428" text-anchor="middle">⑤ 電磁開關</text><text class="cs" x="715" y="442" text-anchor="middle">線圈 A1–A2</text>
+        <text class="ct" x="806" y="434">L2（220V 另一條火線）</text>
+        <text class="cs" x="60" y="505" font-size="12">這條線上任何一個斷開，電磁開關就跳開、馬達停。控制器只負責「自動」那一格，壞掉也不會讓馬達空轉或過熱。</text>
+      </svg>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--ac)"></i>220V 交流</span>
+      <span><i style="background:var(--dc)"></i>12V 直流</span>
+      <span><i style="background:var(--sig)"></i>5V／訊號</span>
+      <span><i style="background:repeating-linear-gradient(90deg,var(--pe) 0 6px,transparent 6px 10px)"></i>接地</span>
+    </div>
+  </section>
+
+  <!-- 電動球閥接線 -->
+  <section class="sheet">
+    <h2>電動球閥接線</h2>
+    <p class="sub">總閥用斷電自動關的型式，停電時水塔的水不會靠重力一直往下流；分區閥用便宜的 3 線常電型。每顆閥都只用 1 路繼電器。線的顏色各家不同，接之前對照賣場的接線圖。</p>
+    <div class="scroll">
+      <svg viewBox="0 0 900 260" style="min-width:760px;width:100%;height:auto" role="img" aria-label="電動球閥接線圖">
+        <text class="ct" x="20" y="26" font-size="14">總閥：2 線・斷電自動關（電容式）</text>
+        <rect class="c" x="20" y="60" width="90" height="40" rx="4"/><text class="ct" x="65" y="85" text-anchor="middle">F1 +12V</text>
+        <rect class="c" x="160" y="60" width="110" height="40" rx="4"/><text class="ct" x="215" y="78" text-anchor="middle">繼電器 2</text><text class="cs" x="215" y="92" text-anchor="middle">COM → NO</text>
+        <rect class="c" x="320" y="50" width="110" height="110" rx="10"/><text class="ct" x="375" y="100" text-anchor="middle">總閥</text><text class="cs" x="375" y="116" text-anchor="middle">內建電容</text>
+        <path class="w-dc" d="M110 80 H160 M270 80 H320"/>
+        <text class="cs" x="282" y="72">+ 線</text>
+        <rect class="c" x="20" y="130" width="90" height="40" rx="4"/><text class="ct" x="65" y="155" text-anchor="middle">GND −</text>
+        <path d="M110 150 H320" stroke="var(--ink)" stroke-width="2.4" fill="none"/>
+        <text class="cs" x="282" y="142">− 線</text>
+        <text class="cs" x="20" y="200" font-size="12">繼電器吸合 → 閥打開，同時充電</text>
+        <text class="cs" x="20" y="218" font-size="12">繼電器放開或停電 → 靠電容的電自己關回去</text>
+
+        <text class="ct" x="480" y="26" font-size="14">A～D 區閥：3 線・常電型</text>
+        <rect class="c" x="480" y="44" width="90" height="36" rx="4"/><text class="ct" x="525" y="67" text-anchor="middle">F1 +12V</text>
+        <rect class="c" x="480" y="98" width="90" height="36" rx="4"/><text class="ct" x="525" y="121" text-anchor="middle">F1 +12V</text>
+        <rect class="c" x="600" y="98" width="110" height="36" rx="4"/><text class="ct" x="655" y="114" text-anchor="middle">繼電器 3～6</text><text class="cs" x="655" y="127" text-anchor="middle">COM → NO</text>
+        <rect class="c" x="480" y="152" width="90" height="36" rx="4"/><text class="ct" x="525" y="175" text-anchor="middle">GND −</text>
+        <rect class="c" x="760" y="44" width="120" height="144" rx="10"/><text class="ct" x="820" y="112" text-anchor="middle">分區閥</text><text class="cs" x="820" y="128" text-anchor="middle">A／B／C／D</text>
+        <path class="w-dc" d="M570 62 H760 M570 116 H600 M710 116 H760"/>
+        <path d="M570 170 H760" stroke="var(--ink)" stroke-width="2.4" fill="none"/>
+        <text class="cs" x="716" y="56">常電線</text><text class="cs" x="716" y="110">控制線</text><text class="cs" x="716" y="164">接地線</text>
+        <text class="cs" x="480" y="218" font-size="12">控制線有電 → 開；沒電 → 馬達轉回去關</text>
+        <text class="cs" x="480" y="236" font-size="12">整個停電時停在原位，但總閥會先關，水過不來</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- 3 對照表 -->
+  <section class="sheet">
+    <h2>繼電器與訊號對照</h2>
+    <p class="sub">之後寫 ESP32 程式就照這張表。腳位是建議值，接線時可以再調整。</p>
+    <div class="tables">
+      <div class="scroll">
+        <h3>輸出（8 路繼電器）</h3>
+        <table>
+          <thead><tr><th>通道</th><th>控制什麼</th><th>電壓</th><th>腳位</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>加壓馬達（電磁開關線圈）</td><td><span class="tag t-ac">220V</span></td><td><code>GPIO32</code></td></tr>
+            <tr><td>2</td><td>總閥<br><span class="muted" style="font-size:12.5px">2 線・斷電自動關</span></td><td><span class="tag t-dc">12V</span></td><td><code>GPIO33</code></td></tr>
+            <tr><td>3</td><td>A 區閥<br><span class="muted" style="font-size:12.5px">3 線・常電型（B～D 區相同）</span></td><td><span class="tag t-dc">12V</span></td><td><code>GPIO25</code></td></tr>
+            <tr><td>4</td><td>B 區閥</td><td><span class="tag t-dc">12V</span></td><td><code>GPIO26</code></td></tr>
+            <tr><td>5</td><td>C 區閥</td><td><span class="tag t-dc">12V</span></td><td><code>GPIO27</code></td></tr>
+            <tr><td>6</td><td>D 區閥</td><td><span class="tag t-dc">12V</span></td><td><code>GPIO14</code></td></tr>
+            <tr><td>7</td><td>注肥泵</td><td><span class="tag t-dc">12V</span></td><td><code>GPIO13</code></td></tr>
+            <tr><td>8</td><td>門上異常燈</td><td><span class="tag t-dc">12V</span></td><td><code>GPIO4</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="scroll">
+        <h3>輸入（感測器與狀態）</h3>
+        <table>
+          <thead><tr><th>訊號</th><th>接法</th><th>腳位</th></tr></thead>
+          <tbody>
+            <tr><td>流量計脈衝</td><td class="muted">10kΩ 上拉到 3.3V</td><td><code>GPIO34</code></td></tr>
+            <tr><td>水壓 0.5–4.5V</td><td class="muted">電阻分壓成 0.3–3.0V</td><td><code>GPIO35</code></td></tr>
+            <tr><td>水塔浮球</td><td class="muted">浮球選雙接點，一組串馬達線圈，一組給控制器讀</td><td><code>GPIO36</code></td></tr>
+            <tr><td>肥料桶液位</td><td class="muted">乾接點，上拉到 3.3V</td><td><code>GPIO39</code></td></tr>
+            <tr><td>馬達真的在轉</td><td class="muted">電磁開關輔助接點</td><td><code>GPIO23</code></td></tr>
+            <tr><td>手動／自動狀態</td><td class="muted">切換開關的第二組接點</td><td><code>GPIO22</code></td></tr>
+            <tr><td>緊急停止狀態</td><td class="muted">緊急停止的第二組接點</td><td><code>GPIO21</code></td></tr>
+            <tr><td>土壤濕度 ×4</td><td class="muted">RS485 一條線串 4 支</td><td><code>GPIO18/19</code></td></tr>
+            <tr><td>4G 模組</td><td class="muted">序列埠＋開機腳</td><td><code>GPIO16/17/5</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 材料 -->
+  <section class="sheet">
+    <h2>電箱材料清單</h2>
+    <p class="sub">編號對應盤面配置圖。⑨⑩⑰ 已經算在預算表的「ESP32＋4G 模組＋8 路繼電器＋天線」NT$2,500 裡。</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>#</th><th>品項</th><th>規格建議</th><th class="n">數量</th><th class="n">估價 NT$</th></tr></thead>
+        <tbody id="bom"></tbody>
+        <tfoot><tr><td></td><td colspan="3">電箱小計（不含 ⑨⑩⑰）</td><td class="n" id="bomTotal"></td></tr></tfoot>
+      </table>
+    </div>
+    <p class="foot" style="margin-top:10px">預算表原本的「防水電箱、12V 電源、漏電斷路器、馬達電磁開關」是 NT$4,000。照這份設計補上防雷、積熱電驛、門板開關和端子台之後，大約多 NT$3,600，<b>已更新到預算表</b>（電箱改成 NT$7,600）。馬達和電箱都用 220V，跟台電申請時要申請有 220V 的單相電。</p>
+  </section>
+
+  <!-- 5 安全 -->
+  <section class="sheet">
+    <h2>安全設計重點</h2>
+    <div class="cards">
+      <div><h3>三重硬體保護</h3><p>緊急停止、水塔缺水、馬達過載都直接串在電磁開關線圈上，不經過程式。程式當掉、4G 斷線，馬達都不會空轉燒壞。</p></div>
+      <div><h3>總閥停電會自己關</h3><p>總閥用電容式「斷電自動關」電動球閥。停電或控制器重開時總閥自己關上，水塔的水不會靠重力整晚往下流。分區閥用 3 線常電型就好。</p></div>
+      <div><h3>山上要防雷</h3><p>市電進來先過突波保護器，再接到接地棒。電箱和馬達外殼都要接地，接地電阻請電工量。</p></div>
+      <div><h3>防潮</h3><p>山上濕氣重。電線全部從箱子底部用防水接頭進出，加一個透氣閥和除濕包，避免箱內結露讓電路板生鏽。</p></div>
+      <div><h3>控制板壞了也能澆水</h3><p>門上切到「手動」就能直接開馬達，再手動開閥，不用等修好控制板。</p></div>
+    </div>
+  </section>
+
+  <section class="sheet">
+    <h2>待確認</h2>
+    <ul class="todo">
+      <li><b>電動球閥型號</b>：型式已定（總閥 2 線斷電自動關、分區 3 線常電型），買之前把賣場的接線圖給我對一下。</li>
+      <li><b>電工施工</b>：220V 的部分（①～⑦、接地）請有證照的電工接線和檢查，12V 控制的部分可以自己來。</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+(function(){
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs, text) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text !== undefined) e.textContent = text; return e; };
+
+  // 端子台
+  const groups = [
+    {name:'電源', t:['L1','L2','PE'], c:'var(--ac)'},
+    {name:'馬達', t:['L1','L2','PE'], c:'var(--ac)'},
+    {name:'閥 12V', t:['總','A','B','C','D','−'], c:'var(--dc)'},
+    {name:'注肥', t:['+','−'], c:'var(--dc)'},
+    {name:'感測', t:['12','5','G','流','壓','浮','液','A','B'], c:'var(--sig)'},
+  ];
+  const terms = document.getElementById('terms');
+  let x = 154;
+  groups.forEach(gp => {
+    const x0 = x;
+    gp.t.forEach(t => {
+      terms.appendChild(el('rect', {x, y:410, width:8.4, height:44, rx:1.5, fill:'var(--comp)', stroke:gp.c, 'stroke-width':1.2}));
+      terms.appendChild(el('text', {x:x+4.2, y:404, 'text-anchor':'middle', class:'cs', 'font-size':8}, t));
+      x += 9;
+    });
+    terms.appendChild(el('text', {x:(x0+x-1)/2, y:472, 'text-anchor':'middle', class:'cs'}, gp.name));
+    x += 6;
+  });
+  terms.appendChild(el('text', {x:(154+x)/2, y:488, 'text-anchor':'middle', class:'cs'}, '端子台'));
+
+  // 防水接頭
+  const glands = document.getElementById('glands');
+  const gl = ['電源','馬達','閥','注肥','感測','RS485','接地','透氣'];
+  gl.forEach((t,i) => {
+    const cx = 90 + i*48;
+    glands.appendChild(el('circle', {cx, cy:568, r:7, fill:t==='透氣'?'var(--paper)':'var(--ink)', stroke:'var(--ink)', 'stroke-width':1.5}));
+    glands.appendChild(el('text', {x:cx, y:586, 'text-anchor':'middle', class:'dimt', 'font-size':10}, t));
+  });
+
+  // 材料
+  const BOM = [
+    [1,'突波保護器（防雷）','2P，AC 275V','1',1000],
+    [2,'漏電斷路器','2P 20A，感度 30mA','1',600],
+    [3,'馬達分路斷路器','2P 10A（220V 1/2 HP 約 3.5A）','1',250],
+    [4,'控制分路斷路器','2P 6A','1',250],
+    [5,'電磁接觸器（電磁開關）','線圈 220V，附輔助接點','1',500],
+    [6,'積熱電驛','照馬達銘牌電流設定，220V 1/2 HP 約 3～4A','1',400],
+    [7,'12V 電源供應器','100W，DIN 軌或螺絲固定','1',700],
+    [8,'降壓模組 12V→5V','3A，供 ESP32 和 4G 模組','1',100],
+    [9,'ESP32＋A7670 4G 控制板','已含在既有預算','1',null],
+    [10,'8 路繼電器模組','12V 線圈，已含在既有預算','1',null],
+    [11,'RS485 模組','自動收發切換','1',100],
+    [12,'保險絲座＋保險絲','F1～F4','4',200],
+    [13,'端子台、DIN 軌、線槽','含標示貼紙','1 式',600],
+    [14,'接地排＋接地棒','接地棒打在電箱旁','1 式',400],
+    [15,'門板元件','緊急停止、三段切換開關、指示燈 ×3','1 式',600],
+    [16,'防水接頭、透氣閥、除濕包','防水接頭約 10 顆','1 式',400],
+    [17,'4G 天線＋SMA 穿牆座','已含在既有預算','1',null],
+    [18,'防水電箱 IP65','400×500×200 mm，含底板','1',1500],
+  ];
+  const tb = document.getElementById('bom');
+  let total = 0;
+  BOM.forEach(([n,name,spec,q,p]) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><span class="num">${n}</span></td><td></td><td class="muted"></td><td class="n"></td><td class="n"></td>`;
+    tr.children[1].textContent = name; tr.children[2].textContent = spec; tr.children[3].textContent = q;
+    tr.children[4].textContent = p === null ? '—' : p.toLocaleString('en-US');
+    if (p) total += p;
+    tb.appendChild(tr);
+  });
+  document.getElementById('bomTotal').textContent = total.toLocaleString('en-US');
+
+  // 配置圖編號
+  const marks = document.getElementById('marks');
+  const M = [[1,93,90],[2,135,90],[3,177,90],[4,211,90],[5,257,92],[6,311,100],[7,450,78],[9,225,224],[8,75,332],[11,149,332],[10,426,228],[12,75,406],[13,154,410],[14,432,414],[16,90,560],[17,408,22],[18,44,36]];
+  M.forEach(([n,cx,cy]) => {
+    marks.appendChild(el('circle', {cx, cy, r:9}));
+    marks.appendChild(el('text', {x:cx, y:cy+3.5, 'text-anchor':'middle'}, n));
+  });
+})();
+</script>
+
+</body></html>

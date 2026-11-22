@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+/* 周家果園水肥控制：田園綠為主色，水=藍、肥=琥珀；狀態色固定 */
+:root {
+  --bg: #f2f5f1;
+  --surface: #ffffff;
+  --surface-2: #edf1eb;
+  --ink: #16231a;
+  --muted: #5d6c62;
+  --line: #dbe3da;
+  --brand: #2c7a4b;
+  --brand-soft: #e1efe5;
+  --water: #2a78d6;
+  --water-soft: #e3eefb;
+  --fert: #b97800;
+  --fert-soft: #f8eed8;
+  --good: #0f8a0f;
+  --warn: #c98a00;
+  --serious: #d46a3c;
+  --crit: #d03b3b;
+  --crit-soft: #fbe6e6;
+  --s1: #2a78d6;
+  --s2: #eb6834;
+  --s3: #1baf7a;
+  --s4: #eda100;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1411;
+    --surface: #17201a;
+    --surface-2: #1e2922;
+    --ink: #e5ede7;
+    --muted: #94a59a;
+    --line: #2a362e;
+    --brand: #4caf78;
+    --brand-soft: #1b3324;
+    --water: #3987e5;
+    --water-soft: #172a40;
+    --fert: #e0a83f;
+    --fert-soft: #33281a;
+    --good: #0ca30c;
+    --warn: #fab219;
+    --serious: #ec835a;
+    --crit: #e06060;
+    --crit-soft: #3a1d1d;
+    --s1: #3987e5;
+    --s2: #d95926;
+    --s3: #199e70;
+    --s4: #c98500;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-water: var(--water);
+  --color-water-soft: var(--water-soft);
+  --color-fert: var(--fert);
+  --color-fert-soft: var(--fert-soft);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-serious: var(--serious);
+  --color-crit: var(--crit);
+  --color-crit-soft: var(--crit-soft);
+  --font-sans: var(--font-noto), "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
