@@ -131,7 +131,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </button>
         {!mini && (
           <div className="min-w-0">
-            <div className="truncate text-lg leading-tight font-bold text-white">周家果園</div>
+            <div className="truncate text-lg leading-tight font-bold text-white">CHOU 農場平台</div>
             <div className="text-sm text-emerald-200/80">水肥控制系統</div>
           </div>
         )}
