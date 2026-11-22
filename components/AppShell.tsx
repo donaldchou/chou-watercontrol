@@ -6,6 +6,7 @@ import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { ChevronDown, ChevronsLeft, ChevronsRight, LogOut, Menu, ShieldCheck, UserRound, X } from "lucide-react";
 import { controller } from "@/lib/mock";
 import { logout, useMe } from "@/lib/client";
+import { OrchardPicker } from "./OrchardPicker";
 import { PlatformLinks } from "./PlatformLinks";
 import { IconBlueprint, IconCalendar, IconChart, IconHome, IconList, IconSettings, IconSignal, IconSliders } from "./icons";
 
@@ -243,17 +244,24 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
       <div className={`flex min-h-screen flex-col transition-[padding] duration-200 ${collapsed ? "lg:pl-24" : "lg:pl-70"}`}>
         {/* 手機頂欄 */}
-        <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-surface/95 px-3 py-3 backdrop-blur lg:hidden">
-          <button type="button" onClick={() => setOpen(true)} aria-label="開啟選單" className="text-ink">
-            <Menu size={24} />
-          </button>
-          <span className="truncate font-bold">CHOU 農場平台</span>
-          <span className="ml-auto">
-            <Connection />
-          </span>
+        <header className="sticky top-0 z-20 border-b border-line bg-surface/95 backdrop-blur lg:hidden">
+          <div className="flex items-center gap-3 px-3 pt-3 pb-2">
+            <button type="button" onClick={() => setOpen(true)} aria-label="開啟選單" className="text-ink">
+              <Menu size={24} />
+            </button>
+            <span className="truncate font-bold">CHOU 農場平台</span>
+          </div>
+          {/* 頂欄下方：果園切換＋控制箱連線狀態 */}
+          <div className="flex items-center gap-2 px-3 pb-2.5">
+            <OrchardPicker mobile />
+            <span className="ml-auto">
+              <Connection />
+            </span>
+          </div>
         </header>
-        {/* 桌機右上：連線狀態 */}
-        <div className="hidden justify-end px-6 pt-4 lg:flex">
+        {/* 桌機右上：果園切換＋連線狀態 */}
+        <div className="hidden items-center justify-end gap-3 px-6 pt-4 lg:flex">
+          <OrchardPicker />
           <Connection />
         </div>
 

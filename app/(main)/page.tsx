@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { OrchardName } from "@/components/OrchardPicker";
 import { Bar, Card, CardTitle, LevelTag, OnOff, Pill, ZoneBadge } from "@/components/ui";
 import { IconChevron, IconClock, IconDrop, IconFlask, IconFlow, IconGauge } from "@/components/icons";
 import { alerts, controller, currentRun, devices, moistureSkip, nextRun, sensors, zones } from "@/lib/mock";
@@ -44,7 +45,9 @@ export default function Overview() {
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-sm text-muted">11 月 21 日（六）・拉拉山上巴陵</p>
+          <p className="text-sm text-muted">
+            11 月 21 日（六）・<OrchardName />
+          </p>
           <h1 className="text-2xl font-bold">果園總覽</h1>
         </div>
         <Pill tone="fert">

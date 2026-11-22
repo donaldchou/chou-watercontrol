@@ -10,6 +10,9 @@ export const zoneColor: Record<ZoneId, string> = {
   D: "var(--s4)",
 };
 
+/** 有裝控制箱的果園（之後從 CHOU 農場平台的果園列表讀取，用果園編號對應；目前只有中心路_1） */
+export const orchards = [{ id: "zhongxinlu-1", name: "中心路_1", online: true }];
+
 export const controller = {
   online: true,
   signalBars: 4,
