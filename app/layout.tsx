@@ -9,7 +9,7 @@ const noto = Noto_Sans_TC({
 });
 
 export const metadata: Metadata = {
-  title: "周家果園水肥控制",
+  title: "CHOU 農場平台 水肥控制系統",
   description: "拉拉山水蜜桃園自動灌溉與施肥監控",
 };
 

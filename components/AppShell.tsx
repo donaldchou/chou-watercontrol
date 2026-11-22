@@ -247,7 +247,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <button type="button" onClick={() => setOpen(true)} aria-label="開啟選單" className="text-ink">
             <Menu size={24} />
           </button>
-          <span className="font-bold">周家果園</span>
+          <span className="truncate font-bold">CHOU 農場平台</span>
           <span className="ml-auto">
             <Connection />
           </span>
