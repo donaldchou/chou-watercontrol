@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useSyncExternalStore, type ReactNode } from "react";
-import { ChevronDown, ChevronsLeft, ChevronsRight, LogOut, Menu, ShieldCheck, UserRound, X } from "lucide-react";
+import { ChevronDown, ChevronsLeft, ChevronsRight, LayoutGrid, LogOut, Menu, ShieldCheck, UserRound, X } from "lucide-react";
 import { controller } from "@/lib/mock";
 import { logout, useMe } from "@/lib/client";
 import { OrchardPicker } from "./OrchardPicker";
@@ -15,6 +15,7 @@ const NAV = [
   {
     group: "監控",
     items: [
+      { href: "/sites", label: "所有案場", Icon: LayoutGrid },
       { href: "/", label: "總覽", Icon: IconHome },
       { href: "/data", label: "數據", Icon: IconChart },
       { href: "/logs", label: "紀錄", Icon: IconList },

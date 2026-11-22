@@ -13,6 +13,56 @@ export const zoneColor: Record<ZoneId, string> = {
 /** 有裝控制箱的果園（之後從 CHOU 農場平台的果園列表讀取，用果園編號對應；目前只有中心路_1） */
 export const orchards = [{ id: "zhongxinlu-1", name: "中心路_1", online: true }];
 
+/** 所有案場總覽用：每個控制箱目前的狀態。example = 示意資料（目前真正會裝的只有中心路_1） */
+export type Site = {
+  id: string;
+  name: string;
+  example: boolean;
+  online: boolean;
+  signalBars: number;
+  lastReport: string;
+  status: "irrigating" | "idle" | "offline";
+  activity: string;
+  progress?: { zone: ZoneId; elapsedMin: number; totalMin: number; step: string };
+  pressure: number | null;
+  waterTankPct: number;
+  fertTankPct: number;
+  todayWaterM3: number;
+  alerts: { level: Level; text: string }[];
+  next: string;
+};
+
+export const sites: Site[] = [
+  {
+    id: "zhongxinlu-1", name: "中心路_1", example: false, online: true, signalBars: 4, lastReport: "14:32",
+    status: "irrigating", activity: "採收季早晨施肥", progress: { zone: "B", elapsedMin: 12, totalMin: 20, step: "注肥中" },
+    pressure: 1.8, waterTankPct: 78, fertTankPct: 42, todayWaterM3: 2.4,
+    alerts: [{ level: "warn", text: "肥料桶剩 42%，約可用 3 次" }], next: "明天 06:00 採收季早晨施肥",
+  },
+  {
+    id: "ex-shangbaling-a", name: "上巴陵_A", example: true, online: false, signalBars: 0, lastReport: "11:28（3 小時前）",
+    status: "offline", activity: "最後狀態：待機",
+    pressure: null, waterTankPct: 55, fertTankPct: 80, todayWaterM3: 1.1,
+    alerts: [{ level: "crit", text: "控制箱斷線超過 3 小時，排程停止" }], next: "今天 17:30 傍晚補水（可能無法執行）",
+  },
+  {
+    id: "ex-fuxing-2", name: "復興_2", example: true, online: true, signalBars: 2, lastReport: "14:31",
+    status: "irrigating", activity: "傍晚補水", progress: { zone: "A", elapsedMin: 5, totalMin: 30, step: "清水" },
+    pressure: 1.1, waterTankPct: 31, fertTankPct: 66, todayWaterM3: 0.6,
+    alerts: [
+      { level: "serious", text: "水壓偏低 1.1 kg，疑似漏水" },
+      { level: "warn", text: "蓄水桶剩 31%" },
+    ],
+    next: "明天 05:30 平時氮肥",
+  },
+  {
+    id: "ex-zhongxinlu-2", name: "中心路_2", example: true, online: true, signalBars: 3, lastReport: "14:32",
+    status: "idle", activity: "待機中",
+    pressure: 0, waterTankPct: 92, fertTankPct: 70, todayWaterM3: 1.8,
+    alerts: [], next: "今天 17:30 傍晚補水",
+  },
+];
+
 export const controller = {
   online: true,
   signalBars: 4,

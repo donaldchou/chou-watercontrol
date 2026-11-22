@@ -19,6 +19,9 @@ function read() {
   }
   return orchards[0].id;
 }
+export function setOrchard(id: string) {
+  write(id);
+}
 function write(id: string) {
   memory = id;
   try {
