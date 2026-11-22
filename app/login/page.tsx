@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { IconLeaf } from "@/components/icons";
 
 const field = "w-full rounded-xl border border-line bg-surface px-3 py-3 text-base outline-none focus:border-brand";
 
@@ -44,9 +43,9 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand text-white">
-            <IconLeaf width={28} height={28} />
-          </span>
+          {/* 平台自己的分頁圖示（proxy 已放行 /icon.svg，不用登入也讀得到） */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icon.svg" width={56} height={56} alt="" className="block" />
           <div>
             <h1 className="text-2xl font-bold">周家果園</h1>
             <p className="text-sm text-muted">水肥控制系統</p>

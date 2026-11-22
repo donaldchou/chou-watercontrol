@@ -6,7 +6,7 @@ import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { ChevronDown, ChevronsLeft, ChevronsRight, LogOut, Menu, ShieldCheck, UserRound, X } from "lucide-react";
 import { controller } from "@/lib/mock";
 import { logout, useMe } from "@/lib/client";
-import { IconBlueprint, IconCalendar, IconChart, IconHome, IconLeaf, IconList, IconSettings, IconSignal, IconSliders } from "./icons";
+import { IconBlueprint, IconCalendar, IconChart, IconHome, IconList, IconSettings, IconSignal, IconSliders } from "./icons";
 
 /** 左側選單（同 chou-platform 的機制：分組、可收合、手機抽屜） */
 const NAV = [
@@ -122,9 +122,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
           onClick={() => (mini ? setCollapsed(false) : toggleAll())}
           title={mini ? "展開選單" : allClosed ? "全部展開" : "全部收合"}
           aria-label={mini ? "展開選單" : allClosed ? "全部展開" : "全部收合"}
-          className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-emerald-500 text-white transition hover:brightness-110"
+          className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl transition hover:brightness-110"
         >
-          <IconLeaf width={22} height={22} />
+          {/* 平台自己的分頁圖示（favicon） */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icon.svg" width={40} height={40} alt="" className="block" />
         </button>
         {!mini && (
           <div className="min-w-0">
