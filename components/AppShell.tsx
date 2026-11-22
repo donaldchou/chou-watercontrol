@@ -6,6 +6,7 @@ import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { ChevronDown, ChevronsLeft, ChevronsRight, LogOut, Menu, ShieldCheck, UserRound, X } from "lucide-react";
 import { controller } from "@/lib/mock";
 import { logout, useMe } from "@/lib/client";
+import { PlatformLinks } from "./PlatformLinks";
 import { IconBlueprint, IconCalendar, IconChart, IconHome, IconList, IconSettings, IconSignal, IconSliders } from "./icons";
 
 /** 左側選單（同 chou-platform 的機制：分組、可收合、手機抽屜） */
@@ -183,6 +184,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         })}
       </div>
       <div className="space-y-1 border-t border-emerald-800 p-3">
+        <PlatformLinks current="chou-watercontrol" mini={mini} captionClass="text-emerald-300/70" />
         <div
           className={`flex items-center gap-2 text-base text-emerald-100 ${mini ? "justify-center" : "px-2"}`}
           title={me ? `${me.email}（${roleLabel}）` : undefined}
