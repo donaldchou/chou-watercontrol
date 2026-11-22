@@ -47,7 +47,7 @@ export default function LoginPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icon.svg" width={56} height={56} alt="" className="block" />
           <div>
-            <h1 className="text-2xl font-bold">周家果園</h1>
+            <h1 className="text-2xl font-bold">CHOU 農場平台</h1>
             <p className="text-sm text-muted">水肥控制系統</p>
           </div>
         </div>
